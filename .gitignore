@@ -1,0 +1,32 @@
+# Environment
+.env
+*.env.local
+
+# Logs
+*.log
+
+# Java / Maven
+target/
+*.class
+*.jar
+*.war
+
+# Angular / Node
+node_modules/
+dist/
+.angular/
+
+# Docker volumes
+pgdata/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploads (local dev only)
+backend/src/main/resources/static/uploads/
