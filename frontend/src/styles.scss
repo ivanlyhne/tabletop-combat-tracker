@@ -1,0 +1,33 @@
+@use '@angular/material' as mat;
+
+// Use Angular Material M3 dark theme
+$gm-theme: mat.define-theme((
+  color: (
+    theme-type: dark,
+  ),
+));
+
+html {
+  @include mat.all-component-themes($gm-theme);
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background-color: #1a1a2e;
+  color: #e0e0e0;
+}
+
+// Global utility classes
+.full-width { width: 100%; }
+.spacer { flex: 1 1 auto; }
+
+.hp-high   { color: #4caf50; }
+.hp-medium { color: #ff9800; }
+.hp-low    { color: #f44336; }
+
+.active-combatant {
+  border-left: 4px solid #ffcc00 !important;
+  background-color: rgba(255, 204, 0, 0.08) !important;
+}
