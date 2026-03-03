@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/gm_combat
-    username: gm_user
-    password: gm_pass
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/gm_combat}
+    username: ${DB_USERNAME:gm_user}
+    password: ${DB_PASSWORD:gm_pass}
   jpa:
     hibernate:
       ddl-auto: validate
