@@ -23,29 +23,32 @@ public class MapEntity {
     @Column(nullable = false)
     private String name;
 
+    @Column(name = "background_image_url")
     private String backgroundImageUrl;
 
-    @Column(nullable = false)
+    @Column(name = "width_cells", nullable = false)
     private int widthCells = 20;
 
-    @Column(nullable = false)
+    @Column(name = "height_cells", nullable = false)
     private int heightCells = 20;
 
-    @Column(nullable = false)
+    @Column(name = "cell_size_px", nullable = false)
     private int cellSizePx = 60;
 
-    @Column(nullable = false)
+    @Column(name = "cell_size_ft", nullable = false)
     private int cellSizeFt = 5;
 
-    @Column(nullable = false)
+    @Column(name = "grid_type", nullable = false)
     private String gridType = "SQUARE";
 
-    @Column(nullable = false)
+    @Column(name = "grid_color", nullable = false)
     private String gridColor = "#cccccc80";
 
     @CreationTimestamp
+    @Column(name = "created_at")
     private Instant createdAt;
 
     @UpdateTimestamp
+    @Column(name = "updated_at")
     private Instant updatedAt;
 }

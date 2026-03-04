@@ -30,8 +30,10 @@ public class Campaign {
     private String ruleset = "DND_5E";
 
     @CreationTimestamp
+    @Column(name = "created_at")
     private Instant createdAt;
 
     @UpdateTimestamp
+    @Column(name = "updated_at")
     private Instant updatedAt;
 }

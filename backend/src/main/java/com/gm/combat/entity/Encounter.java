@@ -33,7 +33,11 @@ public class Encounter {
 
     private String description;
     private String objectives;
+
+    @Column(name = "terrain_notes")
     private String terrainNotes;
+
+    @Column(name = "loot_notes")
     private String lootNotes;
 
     @Column(nullable = false)
@@ -43,20 +47,28 @@ public class Encounter {
     @Column(nullable = false)
     private EncounterStatus status;
 
+    @Column(name = "current_round")
     private int currentRound;
+
+    @Column(name = "active_combatant_index")
     private int activeCombatantIndex;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(columnDefinition = "jsonb", nullable = false)
+    @Column(name = "initiative_order", columnDefinition = "jsonb", nullable = false)
     private List<UUID> initiativeOrder;
 
+    @Column(name = "environment_tag")
     private String environmentTag;
+
+    @Column(name = "difficulty_target")
     private String difficultyTarget;
 
     @CreationTimestamp
+    @Column(name = "created_at")
     private Instant createdAt;
 
     @UpdateTimestamp
+    @Column(name = "updated_at")
     private Instant updatedAt;
 
     @PrePersist

@@ -34,12 +34,19 @@ public class Monster {
     @Column(nullable = false)
     private String ruleset;
 
-    @Column(precision = 5, scale = 3)
+    @Column(name = "challenge_rating", precision = 5, scale = 3)
     private BigDecimal challengeRating;
 
+    @Column(name = "xp_value")
     private Integer xpValue;
+
+    @Column(name = "armor_class")
     private int armorClass;
+
+    @Column(name = "hp_formula")
     private String hpFormula;
+
+    @Column(name = "hp_average")
     private int hpAverage;
 
     @JdbcTypeCode(SqlTypes.JSON)
@@ -47,7 +54,7 @@ public class Monster {
     private Map<String, Object> speed;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(columnDefinition = "jsonb", nullable = false)
+    @Column(name = "saving_throws", columnDefinition = "jsonb", nullable = false)
     private Map<String, Object> savingThrows;
 
     @JdbcTypeCode(SqlTypes.JSON)
@@ -55,19 +62,19 @@ public class Monster {
     private Map<String, Object> skills;
 
     @JdbcTypeCode(SqlTypes.ARRAY)
-    @Column(columnDefinition = "text[]", nullable = false)
+    @Column(name = "damage_resistances", columnDefinition = "text[]", nullable = false)
     private String[] damageResistances;
 
     @JdbcTypeCode(SqlTypes.ARRAY)
-    @Column(columnDefinition = "text[]", nullable = false)
+    @Column(name = "damage_immunities", columnDefinition = "text[]", nullable = false)
     private String[] damageImmunities;
 
     @JdbcTypeCode(SqlTypes.ARRAY)
-    @Column(columnDefinition = "text[]", nullable = false)
+    @Column(name = "damage_vulnerabilities", columnDefinition = "text[]", nullable = false)
     private String[] damageVulnerabilities;
 
     @JdbcTypeCode(SqlTypes.ARRAY)
-    @Column(columnDefinition = "text[]", nullable = false)
+    @Column(name = "condition_immunities", columnDefinition = "text[]", nullable = false)
     private String[] conditionImmunities;
 
     @JdbcTypeCode(SqlTypes.JSON)
@@ -79,19 +86,22 @@ public class Monster {
     private List<Map<String, Object>> actions;
 
     @JdbcTypeCode(SqlTypes.ARRAY)
-    @Column(columnDefinition = "text[]", nullable = false)
+    @Column(name = "environment_tags", columnDefinition = "text[]", nullable = false)
     private String[] environmentTags;
 
+    @Column(name = "external_id")
     private String externalId;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(columnDefinition = "jsonb", nullable = false)
+    @Column(name = "extra_attributes", columnDefinition = "jsonb", nullable = false)
     private Map<String, Object> extraAttributes;
 
     @CreationTimestamp
+    @Column(name = "created_at")
     private Instant createdAt;
 
     @UpdateTimestamp
+    @Column(name = "updated_at")
     private Instant updatedAt;
 
     @PrePersist

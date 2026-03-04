@@ -33,15 +33,25 @@ public class Combatant {
     @Column(name = "monster_id")
     private UUID monsterId;
 
-    @Column(nullable = false)
+    @Column(name = "display_name", nullable = false)
     private String displayName;
 
+    @Column(name = "initiative_value")
     private Integer initiativeValue;
+
+    @Column(name = "initiative_modifier")
     private int initiativeModifier;
 
+    @Column(name = "current_hp")
     private int currentHp;
+
+    @Column(name = "max_hp")
     private int maxHp;
+
+    @Column(name = "temp_hp")
     private int tempHp;
+
+    @Column(name = "armor_class")
     private int armorClass;
 
     @Column(name = "is_player_character", nullable = false)
@@ -61,19 +71,28 @@ public class Combatant {
     @Column(columnDefinition = "jsonb", nullable = false)
     private List<ConditionEntry> conditions;
 
+    @Column(name = "position_x")
     private Integer positionX;
+
+    @Column(name = "position_y")
     private Integer positionY;
+
+    @Column(name = "token_color")
     private String tokenColor;
+
+    @Column(name = "token_image_url")
     private String tokenImageUrl;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(columnDefinition = "jsonb", nullable = false)
+    @Column(name = "stats_override", columnDefinition = "jsonb", nullable = false)
     private Map<String, Object> statsOverride;
 
     @CreationTimestamp
+    @Column(name = "created_at")
     private Instant createdAt;
 
     @UpdateTimestamp
+    @Column(name = "updated_at")
     private Instant updatedAt;
 
     @PrePersist

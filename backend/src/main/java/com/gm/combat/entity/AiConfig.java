@@ -24,20 +24,24 @@ public class AiConfig {
     @Column(nullable = false)
     private String provider;
 
+    @Column(name = "encrypted_api_key")
     private String encryptedApiKey;
 
+    @Column(name = "model_name")
     private String modelName;
 
-    @Column(nullable = false)
+    @Column(name = "max_tokens", nullable = false)
     private int maxTokens;
 
     @Column(nullable = false, precision = 3, scale = 2)
     private BigDecimal temperature;
 
     @CreationTimestamp
+    @Column(name = "created_at")
     private Instant createdAt;
 
     @UpdateTimestamp
+    @Column(name = "updated_at")
     private Instant updatedAt;
 
     @PrePersist

@@ -28,33 +28,48 @@ public class Character {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false)
+    @Column(name = "character_type", nullable = false)
     private String characterType;
 
     @Column(nullable = false)
     private String ruleset;
 
+    @Column(name = "initiative_modifier")
     private int initiativeModifier;
+
+    @Column(name = "armor_class")
     private int armorClass;
+
+    @Column(name = "max_hp")
     private int maxHp;
+
+    @Column(name = "current_hp")
     private int currentHp;
+
+    @Column(name = "temp_hp")
     private int tempHp;
+
     private int speed;
+
+    @Column(name = "passive_perception")
     private Integer passivePerception;
 
     @Column(columnDefinition = "TEXT")
     private String notes;
 
+    @Column(name = "external_id")
     private String externalId;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(columnDefinition = "jsonb", nullable = false)
+    @Column(name = "extra_attributes", columnDefinition = "jsonb", nullable = false)
     private Map<String, Object> extraAttributes;
 
     @CreationTimestamp
+    @Column(name = "created_at")
     private Instant createdAt;
 
     @UpdateTimestamp
+    @Column(name = "updated_at")
     private Instant updatedAt;
 
     @PrePersist
