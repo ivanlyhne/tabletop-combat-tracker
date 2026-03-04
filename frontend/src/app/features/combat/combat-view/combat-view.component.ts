@@ -17,9 +17,12 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { EncounterService } from '../../../core/api/encounter.service';
 import { CombatApiService } from '../../../core/api/combat.service';
+import { MapApiService } from '../../../core/api/map.service';
 import { StompService } from '../../../core/websocket/stomp.service';
 import { Combatant, Encounter } from '../../../shared/models/encounter.model';
+import { MapConfig, AnnotationConfig } from '../../../shared/models/map.model';
 import { InitiativeTrackerComponent } from '../initiative-tracker/initiative-tracker.component';
+import { BattleMapComponent } from '../../map/battle-map/battle-map.component';
 
 const STATUS_LABEL: Record<string, string> = {
   DRAFT: 'Setup', SETUP: 'Setup', ACTIVE: 'Active',
@@ -40,7 +43,7 @@ const CONDITIONS = [
     MatToolbarModule, MatButtonModule, MatIconModule, MatCardModule,
     MatFormFieldModule, MatInputModule, MatSelectModule, MatChipsModule,
     MatDividerModule, MatProgressSpinnerModule, MatSnackBarModule, MatTooltipModule,
-    InitiativeTrackerComponent,
+    InitiativeTrackerComponent, BattleMapComponent,
   ],
   template: `
     <div class="combat-layout">
@@ -112,13 +115,25 @@ const CONDITIONS = [
               </app-initiative-tracker>
             </div>
 
-            <!-- Right: Map placeholder -->
+            <!-- Right: Battle Map -->
             <div class="right-panel">
-              <div class="map-placeholder">
-                <mat-icon class="map-icon">map</mat-icon>
-                <p>Battle Map</p>
-                <span class="map-hint">Coming in Phase 7</span>
-              </div>
+              @if (activeMap()) {
+                <gm-battle-map
+                  [map]="activeMap()!"
+                  [combatants]="encounter()!.combatants"
+                  [activeCombatantId]="activeCombatantId()"
+                  [encounterId]="encounter()!.id"
+                  [annotations]="annotations()"
+                  (annotationCreated)="onAnnotationCreated($event)"
+                  (annotationDeleted)="onAnnotationDeleted($event)">
+                </gm-battle-map>
+              } @else {
+                <div class="map-placeholder">
+                  <mat-icon class="map-icon">map</mat-icon>
+                  <p>No map assigned</p>
+                  <span class="map-hint">Create a map and link it to this encounter</span>
+                </div>
+              }
             </div>
           </div>
 
@@ -304,6 +319,7 @@ export class CombatViewComponent implements OnInit {
   private router = inject(Router);
   private encounterService = inject(EncounterService);
   private combatApi = inject(CombatApiService);
+  private mapApi = inject(MapApiService);
   private stomp = inject(StompService);
   private destroyRef = inject(DestroyRef);
   private snack = inject(MatSnackBar);
@@ -311,6 +327,8 @@ export class CombatViewComponent implements OnInit {
   encounter = signal<Encounter | null>(null);
   selectedId = signal<string | null>(null);
   busy = signal(false);
+  activeMap = signal<MapConfig | null>(null);
+  annotations = signal<AnnotationConfig[]>([]);
 
   conditionOptions = CONDITIONS;
   STATUS_LABEL = STATUS_LABEL;
@@ -322,12 +340,24 @@ export class CombatViewComponent implements OnInit {
     return enc.combatants.find(c => c.id === id) ?? null;
   });
 
+  activeCombatantId = computed(() => {
+    const enc = this.encounter();
+    if (!enc || enc.initiativeOrder.length === 0) return null;
+    return enc.initiativeOrder[enc.activeCombatantIndex] ?? null;
+  });
+
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('encounterId')!;
 
     // Initial REST load
     this.encounterService.getById(id).subscribe({
-      next: enc => this.encounter.set(enc),
+      next: enc => {
+        this.encounter.set(enc);
+        if (enc.mapId) {
+          this.mapApi.getById(enc.mapId).subscribe(map => this.activeMap.set(map));
+          this.mapApi.getAnnotations(id).subscribe(anns => this.annotations.set(anns));
+        }
+      },
       error: () => this.snack.open('Failed to load encounter', 'Close', { duration: 3000 }),
     });
 
@@ -335,6 +365,14 @@ export class CombatViewComponent implements OnInit {
     this.stomp.subscribeToEncounter(id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(msg => this.encounter.set(msg.encounterState));
+  }
+
+  onAnnotationCreated(ann: AnnotationConfig): void {
+    this.annotations.update(list => [...list, ann]);
+  }
+
+  onAnnotationDeleted(annId: string): void {
+    this.annotations.update(list => list.filter(a => a.id !== annId));
   }
 
   selectCombatant(id: string) {
