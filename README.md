@@ -20,8 +20,8 @@ A browser-based GM assistant for running turn-based combat encounters. Built for
 | 2 | JWT Authentication (register/login, guards, interceptor) | ✅ Done |
 | 3 | Campaign / Character / Monster CRUD | ✅ Done |
 | 4 | Encounter setup + 5e XP difficulty calculator | ✅ Done |
-| 5 | Combat engine (initiative, HP, conditions, turns) | 🔨 In progress |
-| 6 | Real-time STOMP WebSocket sync | ⏳ Planned |
+| 5 | Combat engine (initiative, HP, conditions, turns) | ✅ Done |
+| 6 | Real-time STOMP WebSocket sync | ✅ Done |
 | 7 | Battle map (Konva.js canvas, tokens, annotations) | ⏳ Planned |
 | 8 | AI encounter generation (Claude / Perplexity) | ⏳ Planned |
 | 9 | Polish (dice roller, player view, shortcuts) | ⏳ Planned |
@@ -33,6 +33,8 @@ A browser-based GM assistant for running turn-based combat encounters. Built for
 - Encounter creation with 5e XP-based difficulty calculator (CR→XP, threshold tables, multipliers)
 - Difficulty ratings: TRIVIAL / EASY / MEDIUM / HARD / DEADLY
 - Encounter setup page: party member selection, monster picker, live difficulty badge
+- Full combat engine: initiative order, HP/temp HP, damage/healing, conditions with duration tracking, turn advancement with round counter, combatant status (alive/down/dead/fled)
+- Real-time STOMP WebSocket — all connected browsers (GM + players) stay in sync; auto-reconnects; typed event stream (COMBAT_STARTED, TURN_ADVANCED, HP_CHANGED, etc.)
 
 ## Getting Started
 
