@@ -12,16 +12,27 @@ A browser-based GM assistant for running turn-based combat encounters. Built for
 | Real-time | STOMP over WebSocket |
 | Auth | JWT (stateless) |
 
-## Features
+## Implementation Status
 
-- Campaign, character, and monster management
-- Encounter creation with 5e XP-based difficulty calculator
-- Turn-based combat: initiative, HP, conditions, round tracking
-- Real-time sync across GM and player views via WebSocket
-- Interactive battle map (Konva.js canvas) with grid, draggable tokens, annotations
-- Optional AI-assisted encounter generation (Claude / Perplexity)
-- Secure API key storage (Jasypt encryption)
-- JSON export/import
+| Phase | Feature | Status |
+|-------|---------|--------|
+| 1 | Monorepo scaffold (Docker, Spring Boot, Angular) | ✅ Done |
+| 2 | JWT Authentication (register/login, guards, interceptor) | ✅ Done |
+| 3 | Campaign / Character / Monster CRUD | ✅ Done |
+| 4 | Encounter setup + 5e XP difficulty calculator | ✅ Done |
+| 5 | Combat engine (initiative, HP, conditions, turns) | 🔨 In progress |
+| 6 | Real-time STOMP WebSocket sync | ⏳ Planned |
+| 7 | Battle map (Konva.js canvas, tokens, annotations) | ⏳ Planned |
+| 8 | AI encounter generation (Claude / Perplexity) | ⏳ Planned |
+| 9 | Polish (dice roller, player view, shortcuts) | ⏳ Planned |
+| 10 | JSON export/import, PWA | ⏳ Planned |
+
+## Features (implemented)
+
+- Campaign, character, and monster management with full CRUD
+- Encounter creation with 5e XP-based difficulty calculator (CR→XP, threshold tables, multipliers)
+- Difficulty ratings: TRIVIAL / EASY / MEDIUM / HARD / DEADLY
+- Encounter setup page: party member selection, monster picker, live difficulty badge
 
 ## Getting Started
 
