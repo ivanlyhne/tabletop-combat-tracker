@@ -40,5 +40,10 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./features/settings/ai-settings/ai-settings.component').then(m => m.AiSettingsComponent),
   },
+  {
+    path: 'player/:encounterId',
+    // No authGuard — public read-only view for players
+    loadComponent: () => import('./features/player/player-view.component').then(m => m.PlayerViewComponent),
+  },
   { path: '', redirectTo: 'campaigns', pathMatch: 'full' },
 ];

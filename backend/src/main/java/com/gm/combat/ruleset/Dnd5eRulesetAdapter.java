@@ -31,7 +31,8 @@ public class Dnd5eRulesetAdapter implements RulesetAdapter {
                 new ConditionDefinition("Prone", "Disadvantage on attack rolls; melee attacks within 5 ft have advantage, ranged attacks have disadvantage", "🛒"),
                 new ConditionDefinition("Restrained", "Speed 0; disadvantage on attacks and Dex saves; attacks against have advantage", "⛓️"),
                 new ConditionDefinition("Stunned", "Incapacitated; auto-fail Str/Dex saves; attacks against have advantage", "💫"),
-                new ConditionDefinition("Unconscious", "Incapacitated; drop held items; fall prone; auto-fail Str/Dex saves; hits within 5 ft are critical", "💤")
+                new ConditionDefinition("Unconscious", "Incapacitated; drop held items; fall prone; auto-fail Str/Dex saves; hits within 5 ft are critical", "💤"),
+                new ConditionDefinition("Concentrating", "Constitution save DC 10 or half damage taken when hit; losing concentration ends the spell", "🎯")
         );
     }
 
