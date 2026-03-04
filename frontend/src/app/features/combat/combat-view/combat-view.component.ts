@@ -1,4 +1,5 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject, signal, computed } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -16,6 +17,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { EncounterService } from '../../../core/api/encounter.service';
 import { CombatApiService } from '../../../core/api/combat.service';
+import { StompService } from '../../../core/websocket/stomp.service';
 import { Combatant, Encounter } from '../../../shared/models/encounter.model';
 import { InitiativeTrackerComponent } from '../initiative-tracker/initiative-tracker.component';
 
@@ -302,6 +304,8 @@ export class CombatViewComponent implements OnInit {
   private router = inject(Router);
   private encounterService = inject(EncounterService);
   private combatApi = inject(CombatApiService);
+  private stomp = inject(StompService);
+  private destroyRef = inject(DestroyRef);
   private snack = inject(MatSnackBar);
 
   encounter = signal<Encounter | null>(null);
@@ -320,10 +324,17 @@ export class CombatViewComponent implements OnInit {
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('encounterId')!;
+
+    // Initial REST load
     this.encounterService.getById(id).subscribe({
       next: enc => this.encounter.set(enc),
       error: () => this.snack.open('Failed to load encounter', 'Close', { duration: 3000 }),
     });
+
+    // Real-time STOMP updates — keeps all connected clients in sync
+    this.stomp.subscribeToEncounter(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(msg => this.encounter.set(msg.encounterState));
   }
 
   selectCombatant(id: string) {

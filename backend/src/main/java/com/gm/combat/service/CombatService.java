@@ -19,8 +19,10 @@ import com.gm.combat.repository.MonsterRepository;
 import com.gm.combat.ruleset.dnd5e.CombatantSummary;
 import com.gm.combat.ruleset.dnd5e.Dnd5eDifficultyCalculator;
 import com.gm.combat.ruleset.dnd5e.DifficultyResult;
+import com.gm.combat.websocket.CombatStateMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -44,6 +46,7 @@ public class CombatService {
     private final CharacterRepository characterRepository;
     private final MonsterRepository monsterRepository;
     private final Dnd5eDifficultyCalculator difficultyCalculator;
+    private final SimpMessagingTemplate messagingTemplate;
 
     // ── Combat state transitions ──────────────────────────────────────────────
 
@@ -66,7 +69,7 @@ public class CombatService {
         encounter.setActiveCombatantIndex(0);
         encounterRepository.save(encounter);
 
-        return buildResponse(encounter, combatants);
+        return broadcast(buildResponse(encounter, combatants), "COMBAT_STARTED");
     }
 
     public EncounterResponse nextTurn(UUID encounterId, String userEmail) {
@@ -76,7 +79,9 @@ public class CombatService {
         List<UUID> order = encounter.getInitiativeOrder();
         int size = order.size();
         if (size == 0) {
-            return buildResponse(encounter, combatantRepository.findByEncounterId(encounterId));
+            return broadcast(
+                    buildResponse(encounter, combatantRepository.findByEncounterId(encounterId)),
+                    "TURN_ADVANCED");
         }
 
         // Load all combatants into a map for O(1) lookup
@@ -122,7 +127,7 @@ public class CombatService {
         }
         encounterRepository.save(encounter);
 
-        return buildResponse(encounter, new ArrayList<>(combatantMap.values()));
+        return broadcast(buildResponse(encounter, new ArrayList<>(combatantMap.values())), "TURN_ADVANCED");
     }
 
     public EncounterResponse pauseCombat(UUID encounterId, String userEmail) {
@@ -130,7 +135,9 @@ public class CombatService {
         requireStatus(encounter, EncounterStatus.ACTIVE);
         encounter.setStatus(EncounterStatus.PAUSED);
         encounterRepository.save(encounter);
-        return buildResponse(encounter, combatantRepository.findByEncounterId(encounterId));
+        return broadcast(
+                buildResponse(encounter, combatantRepository.findByEncounterId(encounterId)),
+                "COMBAT_PAUSED");
     }
 
     public EncounterResponse resumeCombat(UUID encounterId, String userEmail) {
@@ -138,14 +145,18 @@ public class CombatService {
         requireStatus(encounter, EncounterStatus.PAUSED);
         encounter.setStatus(EncounterStatus.ACTIVE);
         encounterRepository.save(encounter);
-        return buildResponse(encounter, combatantRepository.findByEncounterId(encounterId));
+        return broadcast(
+                buildResponse(encounter, combatantRepository.findByEncounterId(encounterId)),
+                "COMBAT_RESUMED");
     }
 
     public EncounterResponse endCombat(UUID encounterId, String userEmail) {
         Encounter encounter = requireEncounter(encounterId, userEmail);
         encounter.setStatus(EncounterStatus.ENDED);
         encounterRepository.save(encounter);
-        return buildResponse(encounter, combatantRepository.findByEncounterId(encounterId));
+        return broadcast(
+                buildResponse(encounter, combatantRepository.findByEncounterId(encounterId)),
+                "COMBAT_ENDED");
     }
 
     // ── HP mutations ─────────────────────────────────────────────────────────
@@ -172,7 +183,9 @@ public class CombatService {
         }
 
         combatantRepository.save(combatant);
-        return buildResponse(encounter, combatantRepository.findByEncounterId(encounterId));
+        return broadcast(
+                buildResponse(encounter, combatantRepository.findByEncounterId(encounterId)),
+                "HP_CHANGED");
     }
 
     public EncounterResponse applyHealing(UUID encounterId, UUID combatantId, int amount, String userEmail) {
@@ -187,7 +200,9 @@ public class CombatService {
         }
 
         combatantRepository.save(combatant);
-        return buildResponse(encounter, combatantRepository.findByEncounterId(encounterId));
+        return broadcast(
+                buildResponse(encounter, combatantRepository.findByEncounterId(encounterId)),
+                "HP_CHANGED");
     }
 
     public EncounterResponse setTempHp(UUID encounterId, UUID combatantId, int amount, String userEmail) {
@@ -195,7 +210,9 @@ public class CombatService {
         Combatant combatant = requireCombatant(combatantId, encounterId);
         combatant.setTempHp(Math.max(0, amount));
         combatantRepository.save(combatant);
-        return buildResponse(encounter, combatantRepository.findByEncounterId(encounterId));
+        return broadcast(
+                buildResponse(encounter, combatantRepository.findByEncounterId(encounterId)),
+                "TEMP_HP_CHANGED");
     }
 
     // ── Condition management ─────────────────────────────────────────────────
@@ -211,7 +228,9 @@ public class CombatService {
         combatant.setConditions(conditions);
 
         combatantRepository.save(combatant);
-        return buildResponse(encounter, combatantRepository.findByEncounterId(encounterId));
+        return broadcast(
+                buildResponse(encounter, combatantRepository.findByEncounterId(encounterId)),
+                "CONDITION_ADDED");
     }
 
     public EncounterResponse removeCondition(UUID encounterId, UUID combatantId,
@@ -225,7 +244,9 @@ public class CombatService {
         combatant.setConditions(conditions);
 
         combatantRepository.save(combatant);
-        return buildResponse(encounter, combatantRepository.findByEncounterId(encounterId));
+        return broadcast(
+                buildResponse(encounter, combatantRepository.findByEncounterId(encounterId)),
+                "CONDITION_REMOVED");
     }
 
     // ── Position / Status / Initiative ───────────────────────────────────────
@@ -249,7 +270,9 @@ public class CombatService {
             encounterRepository.save(encounter);
         }
 
-        return buildResponse(encounter, combatantRepository.findByEncounterId(encounterId));
+        return broadcast(
+                buildResponse(encounter, combatantRepository.findByEncounterId(encounterId)),
+                "INITIATIVE_SET");
     }
 
     public EncounterResponse moveCombatant(UUID encounterId, UUID combatantId, int x, int y, String userEmail) {
@@ -258,7 +281,9 @@ public class CombatService {
         combatant.setPositionX(x);
         combatant.setPositionY(y);
         combatantRepository.save(combatant);
-        return buildResponse(encounter, combatantRepository.findByEncounterId(encounterId));
+        return broadcast(
+                buildResponse(encounter, combatantRepository.findByEncounterId(encounterId)),
+                "COMBATANT_MOVED");
     }
 
     public EncounterResponse setStatus(UUID encounterId, UUID combatantId,
@@ -268,7 +293,9 @@ public class CombatService {
         combatant.setStatus(newStatus);
         combatant.setActive(newStatus == CombatantStatus.ALIVE || newStatus == CombatantStatus.DOWN);
         combatantRepository.save(combatant);
-        return buildResponse(encounter, combatantRepository.findByEncounterId(encounterId));
+        return broadcast(
+                buildResponse(encounter, combatantRepository.findByEncounterId(encounterId)),
+                "STATUS_CHANGED");
     }
 
     public EncounterResponse addCombatantMidFight(UUID encounterId, AddCombatantRequest req, String userEmail) {
@@ -284,7 +311,9 @@ public class CombatService {
             encounterRepository.save(encounter);
         }
 
-        return buildResponse(encounter, combatantRepository.findByEncounterId(encounterId));
+        return broadcast(
+                buildResponse(encounter, combatantRepository.findByEncounterId(encounterId)),
+                "COMBATANT_ADDED");
     }
 
     // ── Private helpers ───────────────────────────────────────────────────────
@@ -323,6 +352,13 @@ public class CombatService {
                         .reversed())
                 .map(Combatant::getId)
                 .toList();
+    }
+
+    private EncounterResponse broadcast(EncounterResponse response, String eventType) {
+        messagingTemplate.convertAndSend(
+                "/topic/encounter/" + response.id(),
+                new CombatStateMessage(response.id(), eventType, response));
+        return response;
     }
 
     private Combatant buildCombatant(Encounter encounter, AddCombatantRequest req) {
