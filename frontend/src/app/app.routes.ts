@@ -35,5 +35,10 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./features/combat/combat-view/combat-view.component').then(m => m.CombatViewComponent),
   },
+  {
+    path: 'settings/ai',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/settings/ai-settings/ai-settings.component').then(m => m.AiSettingsComponent),
+  },
   { path: '', redirectTo: 'campaigns', pathMatch: 'full' },
 ];

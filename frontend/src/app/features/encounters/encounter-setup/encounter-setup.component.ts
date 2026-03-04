@@ -15,9 +15,11 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatBadgeModule } from '@angular/material/badge';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { EncounterService } from '../../../core/api/encounter.service';
 import { CharacterService } from '../../../core/api/character.service';
 import { MonsterService } from '../../../core/api/monster.service';
+import { AiService, GenerateEncounterRequest } from '../../../core/api/ai.service';
 import { Character } from '../../../shared/models/character.model';
 import { Monster } from '../../../shared/models/monster.model';
 import { AddCombatantRequest, Encounter } from '../../../shared/models/encounter.model';
@@ -55,6 +57,7 @@ const ENVIRONMENT_TAGS = ['dungeon', 'forest', 'city', 'cave', 'underwater', 'mo
     MatProgressSpinnerModule,
     MatSnackBarModule,
     MatBadgeModule,
+    MatTooltipModule,
   ],
   template: `
     <div class="setup-container">
@@ -127,7 +130,23 @@ const ENVIRONMENT_TAGS = ['dungeon', 'forest', 'city', 'cave', 'underwater', 'mo
 
             <!-- Monster Selection -->
             <section class="section">
-              <h3 class="section-title">Monsters</h3>
+              <div class="section-header">
+                <h3 class="section-title">Monsters</h3>
+                <button mat-stroked-button color="accent" class="ai-btn"
+                  [disabled]="aiLoading() || loading()"
+                  (click)="generateWithAi()"
+                  matTooltip="Use AI to suggest monsters for your party">
+                  @if (aiLoading()) {
+                    <mat-spinner diameter="16" style="display:inline-block;margin-right:6px"></mat-spinner>
+                    Generating…
+                  } @else {
+                    <ng-container>
+                      <mat-icon>auto_awesome</mat-icon>
+                      Generate with AI
+                    </ng-container>
+                  }
+                </button>
+              </div>
               @if (monsters().length === 0) {
                 <p class="empty-hint">No monsters in this campaign yet.</p>
               }
@@ -202,7 +221,9 @@ const ENVIRONMENT_TAGS = ['dungeon', 'forest', 'city', 'cave', 'underwater', 'mo
     .setup-card { padding-bottom: 16px; }
     .form-grid { display: flex; flex-direction: column; gap: 16px; }
     .section { display: flex; flex-direction: column; gap: 8px; padding: 8px 0; }
+    .section-header { display: flex; align-items: center; justify-content: space-between; }
     .section-title { margin: 0 0 4px; font-size: 14px; font-weight: 600; color: rgba(0,0,0,.6); }
+    .ai-btn { height: 32px; font-size: 13px; line-height: 32px; }
     .full-width { width: 100%; }
     .empty-hint { color: rgba(0,0,0,.4); font-size: 13px; margin: 0; }
     .monster-picker { display: flex; flex-direction: column; gap: 4px; max-height: 260px; overflow-y: auto; }
@@ -231,6 +252,7 @@ export class EncounterSetupComponent implements OnInit {
   private encounterService = inject(EncounterService);
   private characterService = inject(CharacterService);
   private monsterService = inject(MonsterService);
+  private aiService = inject(AiService);
   private snackBar = inject(MatSnackBar);
 
   campaignId = signal('');
@@ -239,6 +261,7 @@ export class EncounterSetupComponent implements OnInit {
   selectedCharacterIds = signal<Set<string>>(new Set());
   monsterSlots = signal<MonsterSlot[]>([]);
   loading = signal(false);
+  aiLoading = signal(false);
 
   environmentTags = ENVIRONMENT_TAGS;
 
@@ -299,6 +322,78 @@ export class EncounterSetupComponent implements OnInit {
 
   removeMonster(monsterId: string) {
     this.monsterSlots.set(this.monsterSlots().filter(s => s.monster.id !== monsterId));
+  }
+
+  generateWithAi() {
+    const selectedChars = this.characters().filter(c => this.selectedCharacterIds().has(c.id));
+    if (selectedChars.length === 0) {
+      this.snackBar.open('Select at least one party member before generating.', 'Close', { duration: 3000 });
+      return;
+    }
+
+    const v = this.form.value;
+    const partyMembers = selectedChars.map(c =>
+      `${c.name} (HP: ${c.maxHp}, AC: ${c.armorClass})`);
+
+    const req: GenerateEncounterRequest = {
+      ruleset: selectedChars[0].ruleset || 'DND5E',
+      partyMembers,
+      environment: v.environmentTag || undefined,
+      difficultyTarget: 'MEDIUM',
+      freeText: [v.description, v.objectives].filter(Boolean).join(' ') || undefined,
+      maxMonsterCount: 8,
+    };
+
+    this.aiLoading.set(true);
+    this.aiService.generateEncounter(req).subscribe({
+      next: (res) => {
+        this.aiLoading.set(false);
+
+        // Clear existing monster slots before populating from AI
+        this.monsterSlots.set([]);
+
+        // Match AI-suggested monsters to existing campaign monsters by name
+        const existingMonsters = this.monsters();
+        let matched = 0;
+        const unmatched: string[] = [];
+
+        for (const aiMonster of res.monsters) {
+          const found = existingMonsters.find(m =>
+            m.name.toLowerCase() === aiMonster.name.toLowerCase());
+          if (found) {
+            for (let i = 0; i < aiMonster.count; i++) {
+              this.addMonster(found);
+            }
+            matched++;
+          } else {
+            unmatched.push(`${aiMonster.count}× ${aiMonster.name} (CR ${aiMonster.challengeRating})`);
+          }
+        }
+
+        // Populate narrative summary into description if currently blank
+        if (!v.description && res.narrativeSummary) {
+          this.form.patchValue({ description: res.narrativeSummary });
+        }
+
+        // Populate terrain features into terrainNotes if currently blank
+        if (!v.terrainNotes && res.terrainFeatures.length > 0) {
+          this.form.patchValue({ terrainNotes: res.terrainFeatures.join(', ') });
+        }
+
+        const matchMsg = matched > 0
+          ? `Matched ${matched} of ${res.monsters.length} monster type(s) from your library.`
+          : `No monsters matched your campaign library.`;
+        const unmatchMsg = unmatched.length > 0
+          ? ` Unmatched: ${unmatched.join(', ')}. Add them via the Monsters page first.`
+          : '';
+        this.snackBar.open(matchMsg + unmatchMsg, 'Close', { duration: 8000 });
+      },
+      error: (err) => {
+        this.aiLoading.set(false);
+        const msg = err?.error?.message ?? err?.error ?? 'AI generation failed. Check your AI settings.';
+        this.snackBar.open(typeof msg === 'string' ? msg : 'AI generation failed.', 'Close', { duration: 5000 });
+      },
+    });
   }
 
   cancel() {
