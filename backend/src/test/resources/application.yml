@@ -1,0 +1,10 @@
+# Test-only overrides — supplies the required secrets so tests don't need env vars
+app:
+  jwt:
+    secret: dGVzdC1qd3Qtc2VjcmV0LWZvci11bml0LXRlc3RzLW9ubHktZG8tbm90LXVzZS1pbi1wcm9k
+    expiration-ms: 86400000
+  allowed-origins: http://localhost:4200
+
+jasypt:
+  encryptor:
+    password: test-jasypt-password-for-unit-tests-only

@@ -6,8 +6,10 @@ import com.gm.combat.dto.encounter.EncounterResponse;
 import com.gm.combat.entity.CombatantStatus;
 import com.gm.combat.security.SecurityUtils;
 import com.gm.combat.service.CombatService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -15,6 +17,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/encounters/{encounterId}/combat")
 @RequiredArgsConstructor
+@Validated
 public class CombatController {
 
     private final CombatService combatService;
@@ -112,7 +115,7 @@ public class CombatController {
     @PatchMapping("/combatants/{combatantId}/status")
     public EncounterResponse status(@PathVariable UUID encounterId,
                                     @PathVariable UUID combatantId,
-                                    @RequestBody StatusRequest req) {
+                                    @Valid @RequestBody StatusRequest req) {
         CombatantStatus newStatus = CombatantStatus.valueOf(req.status().toUpperCase());
         return combatService.setStatus(encounterId, combatantId, newStatus,
                 SecurityUtils.currentUserEmail());

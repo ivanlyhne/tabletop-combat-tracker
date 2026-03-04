@@ -22,12 +22,18 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class MapService {
+
+    private static final Set<String> ALLOWED_EXTENSIONS =
+            Set.of("jpg", "jpeg", "png", "webp");
+    private static final Set<String> ALLOWED_MIME_TYPES =
+            Set.of("image/jpeg", "image/png", "image/webp");
 
     private final MapRepository mapRepository;
     private final AnnotationRepository annotationRepository;
@@ -81,11 +87,26 @@ public class MapService {
 
     public MapResponse uploadBackground(UUID mapId, MultipartFile file, String userEmail) {
         MapEntity map = requireMap(mapId, userEmail);
+
+        // Validate extension against whitelist
+        String ext = StringUtils.getFilenameExtension(file.getOriginalFilename());
+        if (ext == null || !ALLOWED_EXTENSIONS.contains(ext.toLowerCase())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Only JPG, PNG and WEBP images are allowed.");
+        }
+
+        // Validate MIME type (independent of filename)
+        String mime = file.getContentType();
+        if (mime == null || !ALLOWED_MIME_TYPES.contains(mime.toLowerCase())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Invalid image content type: " + mime);
+        }
+
         try {
             Path uploadDir = Path.of("uploads");
             Files.createDirectories(uploadDir);
-            String ext = StringUtils.getFilenameExtension(file.getOriginalFilename());
-            String filename = mapId + "_bg" + (ext != null ? "." + ext : "");
+            // Use only the sanitised extension — never trust the original filename
+            String filename = mapId + "_bg." + ext.toLowerCase();
             Files.write(uploadDir.resolve(filename), file.getBytes());
             map.setBackgroundImageUrl("/uploads/" + filename);
             return MapResponse.from(mapRepository.save(map));

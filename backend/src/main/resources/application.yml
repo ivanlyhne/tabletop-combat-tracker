@@ -17,12 +17,17 @@ spring:
 
 app:
   jwt:
-    secret: ${JWT_SECRET:cmVwbGFjZS13aXRoLTI1Ni1iaXQtYmFzZTY0LXNlY3JldC1pbi1wcm9kdWN0aW9u}
+    # No default — startup fails fast if JWT_SECRET env var is not set.
+    # For local dev: export JWT_SECRET=local-dev-jwt-secret-min-32-chars
+    secret: ${JWT_SECRET}
     expiration-ms: 86400000
+  allowed-origins: ${ALLOWED_ORIGINS:http://localhost:4200}
 
 jasypt:
   encryptor:
-    password: ${JASYPT_PASSWORD:dev-encrypt-password}
+    # No default — startup fails fast if JASYPT_PASSWORD env var is not set.
+    # For local dev: export JASYPT_PASSWORD=local-dev-jasypt-password
+    password: ${JASYPT_PASSWORD}
 
 server:
   port: 8080
