@@ -14,9 +14,9 @@ import { Combatant } from '../../../shared/models/encounter.model';
     <div class="card" [class.active]="isActive()" [class.selected]="isSelected()"
          [class.inactive]="!combatant().active" (click)="selected.emit(combatant().id)">
 
-      <!-- Initiative bubble -->
-      <div class="initiative" [matTooltip]="'Initiative: ' + (combatant().initiativeValue ?? '?')">
-        {{ combatant().initiativeValue ?? '?' }}
+      <!-- Initiative badge -->
+      <div class="init-badge" [matTooltip]="'Initiative: ' + (combatant().initiativeValue ?? '?')">
+        {{ combatant().initiativeValue ?? '—' }}
       </div>
 
       <!-- Active turn indicator -->
@@ -77,11 +77,14 @@ import { Combatant } from '../../../shared/models/encounter.model';
     .card.active { border-color: #ff9800; background: #fff8e1; }
     .card.selected { border-color: #3f51b5; background: #e8eaf6; }
     .card.inactive { opacity: 0.5; }
-    .initiative {
-      width: 32px; height: 32px; border-radius: 50%;
-      background: #607d8b; color: white;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 700; font-size: 13px; flex-shrink: 0;
+    .init-badge {
+      font-size: 20px;
+      font-weight: 900;
+      color: #ffd700;
+      min-width: 32px;
+      text-align: center;
+      line-height: 1;
+      flex-shrink: 0;
     }
     .turn-arrow { color: #ff9800; font-size: 18px; flex-shrink: 0; }
     .info { flex: 1; min-width: 0; }
