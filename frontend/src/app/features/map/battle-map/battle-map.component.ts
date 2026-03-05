@@ -62,8 +62,8 @@ type ActiveTool = 'select' | 'marker' | 'area' | 'text';
     .tool-group ::ng-deep .mat-button-toggle { color: #90a4ae; border-color: #455a64; }
     .tool-group ::ng-deep .mat-button-toggle-checked { color: #fff; background: #37474f; }
     .grid-info { color: #90a4ae; font-size: 12px; margin-left: auto; }
-    .map-scroll-wrapper { flex: 1; overflow: auto; background: #1a1a2e; }
-    .map-container { display: inline-block; }
+    .map-scroll-wrapper { flex: 1; overflow: hidden; background: #1a1a2e; width: 100%; height: 100%; }
+    .map-container { width: 100%; height: 100%; }
     .popup-anchor { position: fixed; pointer-events: none; }
   `],
 })
@@ -81,6 +81,8 @@ export class BattleMapComponent implements AfterViewInit, OnChanges, OnDestroy {
   @ViewChild('mapContainer') containerRef!: ElementRef<HTMLDivElement>;
 
   activeTool: ActiveTool = 'select';
+
+  private resizeObserver: ResizeObserver | null = null;
 
   private combatApi = inject(CombatApiService);
   private mapApi = inject(MapApiService);
@@ -117,6 +119,7 @@ export class BattleMapComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.resizeObserver?.disconnect();
     this.closePopup();
     this.stage?.destroy();
   }
@@ -124,13 +127,14 @@ export class BattleMapComponent implements AfterViewInit, OnChanges, OnDestroy {
   // ── Stage init ────────────────────────────────────────────────────────────
 
   private initStage(): void {
-    const width = this.map.widthCells * this.map.cellSizePx;
-    const height = this.map.heightCells * this.map.cellSizePx;
+    const container = this.containerRef.nativeElement;
+    const w = container.offsetWidth || 800;
+    const h = container.offsetHeight || 600;
 
     this.stage = new Konva.Stage({
-      container: this.containerRef.nativeElement,
-      width,
-      height,
+      container,
+      width: w,
+      height: h,
     });
 
     this.bgLayer = new Konva.Layer();
@@ -139,6 +143,19 @@ export class BattleMapComponent implements AfterViewInit, OnChanges, OnDestroy {
     this.annotationLayer = new Konva.Layer();
 
     this.stage.add(this.bgLayer, this.gridLayer, this.annotationLayer, this.tokenLayer);
+
+    this.resizeObserver = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        if (width > 0 && height > 0) {
+          this.stage.width(width);
+          this.stage.height(height);
+          this.drawGrid();
+          this.stage.batchDraw();
+        }
+      }
+    });
+    this.resizeObserver.observe(this.containerRef.nativeElement);
   }
 
   private drawAll(): void {
