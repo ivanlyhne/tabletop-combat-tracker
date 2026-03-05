@@ -18,14 +18,14 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { EncounterService } from '../../../core/api/encounter.service';
 import { CharacterService } from '../../../core/api/character.service';
-import { MonsterService } from '../../../core/api/monster.service';
+import { EnemyService } from '../../../core/api/enemy.service';
 import { AiService, GenerateEncounterRequest } from '../../../core/api/ai.service';
 import { Character } from '../../../shared/models/character.model';
-import { Monster } from '../../../shared/models/monster.model';
+import { Enemy } from '../../../shared/models/enemy.model';
 import { AddCombatantRequest, Encounter } from '../../../shared/models/encounter.model';
 
-interface MonsterSlot {
-  monster: Monster;
+interface EnemySlot {
+  enemy: Enemy;
   count: number;
 }
 
@@ -127,14 +127,14 @@ const ENVIRONMENT_TAGS = ['dungeon', 'forest', 'city', 'cave', 'underwater', 'mo
 
             <mat-divider></mat-divider>
 
-            <!-- Monster Selection -->
+            <!-- Enemy Selection -->
             <section class="section">
               <div class="section-header">
-                <h3 class="section-title">Monsters</h3>
+                <h3 class="section-title">Enemies</h3>
                 <button mat-stroked-button color="accent" class="ai-btn"
                   [disabled]="aiLoading() || loading()"
                   (click)="generateWithAi()"
-                  matTooltip="Use AI to suggest monsters for your party">
+                  matTooltip="Use AI to suggest enemies for your party">
                   @if (aiLoading()) {
                     <mat-spinner diameter="16" style="display:inline-block;margin-right:6px"></mat-spinner>
                     Generating…
@@ -146,31 +146,31 @@ const ENVIRONMENT_TAGS = ['dungeon', 'forest', 'city', 'cave', 'underwater', 'mo
                   }
                 </button>
               </div>
-              @if (monsters().length === 0) {
-                <p class="empty-hint">No monsters in this campaign yet.</p>
+              @if (enemies().length === 0) {
+                <p class="empty-hint">No enemies in this campaign yet.</p>
               }
-              <div class="monster-picker">
-                @for (m of monsters(); track m.id) {
-                  <div class="monster-row">
-                    <span class="monster-name">
+              <div class="enemy-picker">
+                @for (m of enemies(); track m.id) {
+                  <div class="enemy-row">
+                    <span class="enemy-name">
                       {{ m.name }}
                       @if (m.challengeRating != null) { <span class="cr-chip">CR {{ m.challengeRating }}</span> }
                       @if (m.xpValue) { <span class="xp-chip">{{ m.xpValue }} XP</span> }
                     </span>
-                    <button mat-icon-button (click)="addMonster(m)" title="Add one">
+                    <button mat-icon-button (click)="addEnemy(m)" title="Add one">
                       <mat-icon>add_circle</mat-icon>
                     </button>
                   </div>
                 }
               </div>
 
-              @if (monsterSlots().length > 0) {
-                <div class="added-monsters">
-                  <h4>Added Monsters</h4>
-                  @for (slot of monsterSlots(); track slot.monster.id) {
+              @if (enemySlots().length > 0) {
+                <div class="added-enemies">
+                  <h4>Added Enemies</h4>
+                  @for (slot of enemySlots(); track slot.enemy.id) {
                     <div class="slot-row">
-                      <span>{{ slot.count }}× {{ slot.monster.name }}</span>
-                      <button mat-icon-button color="warn" (click)="removeMonster(slot.monster.id)">
+                      <span>{{ slot.count }}× {{ slot.enemy.name }}</span>
+                      <button mat-icon-button color="warn" (click)="removeEnemy(slot.enemy.id)">
                         <mat-icon>remove_circle</mat-icon>
                       </button>
                     </div>
@@ -186,12 +186,12 @@ const ENVIRONMENT_TAGS = ['dungeon', 'forest', 'city', 'cave', 'underwater', 'mo
               <h3 class="section-title">Estimated Difficulty</h3>
               <div class="difficulty-badge"
                    [style.background-color]="difficultyColor()"
-                   matTooltip="Based on adjusted XP per party member vs D&D 5e thresholds. Multiplier applied for multiple monsters."
+                   matTooltip="Based on adjusted XP per party member vs D&D 5e thresholds. Multiplier applied for multiple enemies."
                    matTooltipPosition="right">
                 {{ estimatedDifficulty() }}
               </div>
               <span class="difficulty-hint">
-                {{ monsterSlots().length }} monster type(s), {{ selectedCharacterIds().size }} party member(s)
+                {{ enemySlots().length }} enemy type(s), {{ selectedCharacterIds().size }} party member(s)
               </span>
             </section>
 
@@ -239,7 +239,7 @@ const ENVIRONMENT_TAGS = ['dungeon', 'forest', 'city', 'cave', 'underwater', 'mo
     .full-width { width: 100%; }
     .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     .empty-hint { color: rgba(0,0,0,.4); font-size: 13px; margin: 0; }
-    .monster-picker {
+    .enemy-picker {
       display: flex;
       flex-direction: column;
       gap: 4px;
@@ -247,14 +247,14 @@ const ENVIRONMENT_TAGS = ['dungeon', 'forest', 'city', 'cave', 'underwater', 'mo
       overflow-y: auto;
       overflow-x: hidden;
     }
-    .monster-row {
+    .enemy-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 4px 0;
       min-width: 0;
     }
-    .monster-name {
+    .enemy-name {
       font-size: 14px;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -267,8 +267,8 @@ const ENVIRONMENT_TAGS = ['dungeon', 'forest', 'city', 'cave', 'underwater', 'mo
       padding: 1px 5px; margin-left: 6px; color: white; background: #607d8b;
     }
     .xp-chip { background: #8bc34a; }
-    .added-monsters { margin-top: 8px; }
-    .added-monsters h4 { margin: 0 0 6px; font-size: 13px; }
+    .added-enemies { margin-top: 8px; }
+    .added-enemies h4 { margin: 0 0 6px; font-size: 13px; }
     .slot-row { display: flex; align-items: center; justify-content: space-between; padding: 2px 0; }
     .difficulty-section { align-items: flex-start; }
     .difficulty-badge {
@@ -284,15 +284,15 @@ export class EncounterSetupComponent implements OnInit {
   private fb = inject(FormBuilder);
   private encounterService = inject(EncounterService);
   private characterService = inject(CharacterService);
-  private monsterService = inject(MonsterService);
+  private enemyService = inject(EnemyService);
   private aiService = inject(AiService);
   private snackBar = inject(MatSnackBar);
 
   campaignId = signal('');
   characters = signal<Character[]>([]);
-  monsters = signal<Monster[]>([]);
+  enemies = signal<Enemy[]>([]);
   selectedCharacterIds = signal<Set<string>>(new Set());
-  monsterSlots = signal<MonsterSlot[]>([]);
+  enemySlots = signal<EnemySlot[]>([]);
   loading = signal(false);
   aiLoading = signal(false);
 
@@ -308,14 +308,14 @@ export class EncounterSetupComponent implements OnInit {
 
   estimatedDifficulty = computed(() => {
     const partySize = this.selectedCharacterIds().size;
-    const totalMonsters = this.monsterSlots().reduce((s, sl) => s + sl.count, 0);
-    const rawXp = this.monsterSlots().reduce((s, sl) =>
-      s + (sl.monster.xpValue ?? 0) * sl.count, 0);
+    const totalEnemies = this.enemySlots().reduce((s, sl) => s + sl.count, 0);
+    const rawXp = this.enemySlots().reduce((s, sl) =>
+      s + (sl.enemy.xpValue ?? 0) * sl.count, 0);
 
     if (rawXp === 0 || partySize === 0) return 'TRIVIAL';
 
-    const multiplier = totalMonsters <= 1 ? 1 : totalMonsters <= 2 ? 1.5
-      : totalMonsters <= 6 ? 2 : totalMonsters <= 10 ? 2.5 : 3;
+    const multiplier = totalEnemies <= 1 ? 1 : totalEnemies <= 2 ? 1.5
+      : totalEnemies <= 6 ? 2 : totalEnemies <= 10 ? 2.5 : 3;
     const adjusted = rawXp * multiplier;
     const perPc = adjusted / partySize;
 
@@ -332,7 +332,7 @@ export class EncounterSetupComponent implements OnInit {
     const id = this.route.snapshot.paramMap.get('campaignId') ?? '';
     this.campaignId.set(id);
     this.characterService.getAll(id).subscribe(c => this.characters.set(c));
-    this.monsterService.getAll(id).subscribe(m => this.monsters.set(m));
+    this.enemyService.getAll(id).subscribe(m => this.enemies.set(m));
   }
 
   toggleCharacter(id: string) {
@@ -341,19 +341,19 @@ export class EncounterSetupComponent implements OnInit {
     this.selectedCharacterIds.set(s);
   }
 
-  addMonster(monster: Monster) {
-    const slots = this.monsterSlots();
-    const existing = slots.find(s => s.monster.id === monster.id);
+  addEnemy(enemy: Enemy) {
+    const slots = this.enemySlots();
+    const existing = slots.find(s => s.enemy.id === enemy.id);
     if (existing) {
-      this.monsterSlots.set(slots.map(s =>
-        s.monster.id === monster.id ? { ...s, count: s.count + 1 } : s));
+      this.enemySlots.set(slots.map(s =>
+        s.enemy.id === enemy.id ? { ...s, count: s.count + 1 } : s));
     } else {
-      this.monsterSlots.set([...slots, { monster, count: 1 }]);
+      this.enemySlots.set([...slots, { enemy, count: 1 }]);
     }
   }
 
-  removeMonster(monsterId: string) {
-    this.monsterSlots.set(this.monsterSlots().filter(s => s.monster.id !== monsterId));
+  removeEnemy(enemyId: string) {
+    this.enemySlots.set(this.enemySlots().filter(s => s.enemy.id !== enemyId));
   }
 
   generateWithAi() {
@@ -381,24 +381,24 @@ export class EncounterSetupComponent implements OnInit {
       next: (res) => {
         this.aiLoading.set(false);
 
-        // Clear existing monster slots before populating from AI
-        this.monsterSlots.set([]);
+        // Clear existing enemy slots before populating from AI
+        this.enemySlots.set([]);
 
-        // Match AI-suggested monsters to existing campaign monsters by name
-        const existingMonsters = this.monsters();
+        // Match AI-suggested enemies to existing campaign enemies by name
+        const existingEnemies = this.enemies();
         let matched = 0;
         const unmatched: string[] = [];
 
-        for (const aiMonster of res.monsters) {
-          const found = existingMonsters.find(m =>
-            m.name.toLowerCase() === aiMonster.name.toLowerCase());
+        for (const aiEnemy of res.enemies) {
+          const found = existingEnemies.find(m =>
+            m.name.toLowerCase() === aiEnemy.name.toLowerCase());
           if (found) {
-            for (let i = 0; i < aiMonster.count; i++) {
-              this.addMonster(found);
+            for (let i = 0; i < aiEnemy.count; i++) {
+              this.addEnemy(found);
             }
             matched++;
           } else {
-            unmatched.push(`${aiMonster.count}× ${aiMonster.name} (CR ${aiMonster.challengeRating})`);
+            unmatched.push(`${aiEnemy.count}× ${aiEnemy.name} (CR ${aiEnemy.challengeRating})`);
           }
         }
 
@@ -408,10 +408,10 @@ export class EncounterSetupComponent implements OnInit {
         }
 
         const matchMsg = matched > 0
-          ? `Matched ${matched} of ${res.monsters.length} monster type(s) from your library.`
-          : `No monsters matched your campaign library.`;
+          ? `Matched ${matched} of ${res.enemies.length} enemy type(s) from your library.`
+          : `No enemies matched your campaign library.`;
         const unmatchMsg = unmatched.length > 0
-          ? ` Unmatched: ${unmatched.join(', ')}. Add them via the Monsters page first.`
+          ? ` Unmatched: ${unmatched.join(', ')}. Add them via the Enemies page first.`
           : '';
         this.snackBar.open(matchMsg + unmatchMsg, 'Close', { duration: 8000 });
       },
@@ -453,15 +453,15 @@ export class EncounterSetupComponent implements OnInit {
       sourceId: id,
     }));
 
-    const monsterRequests: AddCombatantRequest[] = this.monsterSlots().flatMap(({ monster, count }) =>
+    const enemyRequests: AddCombatantRequest[] = this.enemySlots().flatMap(({ enemy, count }) =>
       Array.from({ length: count }, (_, i) => ({
         sourceType: 'MONSTER' as const,
-        sourceId: monster.id,
-        displayName: count > 1 ? `${monster.name} ${i + 1}` : undefined,
+        sourceId: enemy.id,
+        displayName: count > 1 ? `${enemy.name} ${i + 1}` : undefined,
       }))
     );
 
-    const allRequests = [...charRequests, ...monsterRequests];
+    const allRequests = [...charRequests, ...enemyRequests];
     if (allRequests.length === 0) {
       this.onSaveComplete(encounter.id);
       return;

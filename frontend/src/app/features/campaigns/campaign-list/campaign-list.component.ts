@@ -57,7 +57,7 @@ import { CampaignFormComponent } from '../campaign-form/campaign-form.component'
               <button mat-icon-button color="primary" title="Characters" (click)="goToCharacters(c)">
                 <mat-icon>people</mat-icon>
               </button>
-              <button mat-icon-button color="accent" title="Monsters" (click)="goToMonsters(c)">
+              <button mat-icon-button color="accent" title="Enemies" (click)="goToEnemies(c)">
                 <mat-icon>pest_control</mat-icon>
               </button>
               <button mat-icon-button color="primary" title="Encounters" (click)="goToEncounters(c)">
@@ -131,7 +131,7 @@ export class CampaignListComponent implements OnInit {
   }
 
   goToCharacters(campaign: Campaign) { this.router.navigate(['/campaigns', campaign.id, 'characters']); }
-  goToMonsters(campaign: Campaign) { this.router.navigate(['/campaigns', campaign.id, 'monsters']); }
+  goToEnemies(campaign: Campaign) { this.router.navigate(['/campaigns', campaign.id, 'enemies']); }
   goToEncounters(campaign: Campaign) { this.router.navigate(['/campaigns', campaign.id, 'encounters', 'new']); }
   rulesetLabel(ruleset: string): string { return ruleset === 'DND_5E' ? 'D&D 5e' : ruleset; }
 }

@@ -10,12 +10,12 @@ import com.gm.combat.entity.CombatantStatus;
 import com.gm.combat.entity.ConditionEntry;
 import com.gm.combat.entity.Encounter;
 import com.gm.combat.entity.EncounterStatus;
-import com.gm.combat.entity.Monster;
+import com.gm.combat.entity.Enemy;
 import com.gm.combat.repository.CampaignRepository;
 import com.gm.combat.repository.CharacterRepository;
 import com.gm.combat.repository.CombatantRepository;
 import com.gm.combat.repository.EncounterRepository;
-import com.gm.combat.repository.MonsterRepository;
+import com.gm.combat.repository.EnemyRepository;
 import com.gm.combat.ruleset.dnd5e.CombatantSummary;
 import com.gm.combat.ruleset.dnd5e.Dnd5eDifficultyCalculator;
 import com.gm.combat.ruleset.dnd5e.DifficultyResult;
@@ -44,7 +44,7 @@ public class CombatService {
     private final EncounterRepository encounterRepository;
     private final CombatantRepository combatantRepository;
     private final CharacterRepository characterRepository;
-    private final MonsterRepository monsterRepository;
+    private final EnemyRepository enemyRepository;
     private final Dnd5eDifficultyCalculator difficultyCalculator;
     private final SimpMessagingTemplate messagingTemplate;
 
@@ -386,20 +386,20 @@ public class CombatService {
                     .tokenColor("#4a90e2").statsOverride(statsOverride).build();
 
         } else if ("MONSTER".equalsIgnoreCase(req.sourceType())) {
-            Monster monster = monsterRepository.findById(req.sourceId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Monster not found"));
-            if (monster.getChallengeRating() != null) {
-                statsOverride.put("challengeRating", monster.getChallengeRating());
+            Enemy enemy = enemyRepository.findById(req.sourceId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Enemy not found"));
+            if (enemy.getChallengeRating() != null) {
+                statsOverride.put("challengeRating", enemy.getChallengeRating());
             }
 
             return Combatant.builder()
                     .encounter(encounter)
-                    .monsterId(monster.getId())
-                    .displayName(req.displayName() != null ? req.displayName() : monster.getName())
+                    .monsterId(enemy.getId())
+                    .displayName(req.displayName() != null ? req.displayName() : enemy.getName())
                     .initiativeValue(req.initiativeValue())
                     .initiativeModifier(req.initiativeModifier() != null ? req.initiativeModifier() : 0)
-                    .currentHp(monster.getHpAverage()).maxHp(monster.getHpAverage()).tempHp(0)
-                    .armorClass(monster.getArmorClass())
+                    .currentHp(enemy.getHpAverage()).maxHp(enemy.getHpAverage()).tempHp(0)
+                    .armorClass(enemy.getArmorClass())
                     .playerCharacter(false).visibleToPlayers(true).active(true)
                     .status(CombatantStatus.ALIVE).conditions(new ArrayList<>())
                     .tokenColor("#e24a4a").statsOverride(statsOverride).build();
@@ -420,7 +420,7 @@ public class CombatService {
                         return new CombatantSummary(true, level, null);
                     }).toList();
 
-            List<CombatantSummary> monsters = combatants.stream()
+            List<CombatantSummary> enemies = combatants.stream()
                     .filter(c -> !c.isPlayerCharacter() && c.isActive()
                             && c.getStatus() != CombatantStatus.DEAD)
                     .map(c -> {
@@ -433,7 +433,7 @@ public class CombatService {
                         return new CombatantSummary(false, null, challengeRating);
                     }).toList();
 
-            DifficultyResult result = difficultyCalculator.calculate(party, monsters);
+            DifficultyResult result = difficultyCalculator.calculate(party, enemies);
             difficulty = DifficultyResponse.from(result);
         }
         return EncounterResponse.from(encounter, combatants, difficulty);

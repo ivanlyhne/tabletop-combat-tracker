@@ -1,4 +1,4 @@
-package com.gm.combat.dto.monster;
+package com.gm.combat.dto.enemy;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
-public record MonsterRequest(
+public record EnemyRequest(
         @NotBlank String name,
         String ruleset,
         BigDecimal challengeRating,

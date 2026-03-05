@@ -26,7 +26,7 @@ export interface GenerateEncounterRequest {
   maxMonsterCount?: number;
 }
 
-export interface GeneratedMonsterDto {
+export interface GeneratedEnemyDto {
   name: string;
   count: number;
   challengeRating: string;
@@ -34,7 +34,7 @@ export interface GeneratedMonsterDto {
 
 export interface GenerateEncounterResponse {
   narrativeSummary: string;
-  monsters: GeneratedMonsterDto[];
+  enemies: GeneratedEnemyDto[];
   terrainFeatures: string[];
   suggestedPositions: string[];
 }

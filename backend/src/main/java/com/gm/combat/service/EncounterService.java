@@ -7,7 +7,7 @@ import com.gm.combat.entity.Combatant;
 import com.gm.combat.entity.CombatantStatus;
 import com.gm.combat.entity.Encounter;
 import com.gm.combat.entity.EncounterStatus;
-import com.gm.combat.entity.Monster;
+import com.gm.combat.entity.Enemy;
 import com.gm.combat.entity.ConditionEntry;
 import com.gm.combat.repository.*;
 import com.gm.combat.ruleset.dnd5e.CombatantSummary;
@@ -31,7 +31,7 @@ public class EncounterService {
     private final CombatantRepository combatantRepository;
     private final CampaignRepository campaignRepository;
     private final CharacterRepository characterRepository;
-    private final MonsterRepository monsterRepository;
+    private final EnemyRepository enemyRepository;
     private final Dnd5eDifficultyCalculator difficultyCalculator;
 
     @Transactional(readOnly = true)
@@ -146,25 +146,25 @@ public class EncounterService {
                     .build();
 
         } else if ("MONSTER".equalsIgnoreCase(req.sourceType())) {
-            Monster monster = monsterRepository.findById(req.sourceId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Monster not found"));
+            Enemy enemy = enemyRepository.findById(req.sourceId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Enemy not found"));
 
-            if (monster.getChallengeRating() != null) {
+            if (enemy.getChallengeRating() != null) {
                 // Store as double so JSONB round-trip (BigDecimal→JSON→Double) is consistent
                 // and Hibernate dirty-check won't trigger a spurious UPDATE
-                statsOverride.put("challengeRating", monster.getChallengeRating().doubleValue());
+                statsOverride.put("challengeRating", enemy.getChallengeRating().doubleValue());
             }
 
             return Combatant.builder()
                     .encounter(encounter)
-                    .monsterId(monster.getId())
-                    .displayName(req.displayName() != null ? req.displayName() : monster.getName())
+                    .monsterId(enemy.getId())
+                    .displayName(req.displayName() != null ? req.displayName() : enemy.getName())
                     .initiativeValue(req.initiativeValue())
                     .initiativeModifier(req.initiativeModifier() != null ? req.initiativeModifier() : 0)
-                    .currentHp(monster.getHpAverage())
-                    .maxHp(monster.getHpAverage())
+                    .currentHp(enemy.getHpAverage())
+                    .maxHp(enemy.getHpAverage())
                     .tempHp(0)
-                    .armorClass(monster.getArmorClass())
+                    .armorClass(enemy.getArmorClass())
                     .playerCharacter(false)
                     .visibleToPlayers(true)
                     .active(true)
@@ -193,7 +193,7 @@ public class EncounterService {
                     })
                     .toList();
 
-            List<CombatantSummary> monsters = combatants.stream()
+            List<CombatantSummary> enemies = combatants.stream()
                     .filter(c -> !c.isPlayerCharacter() && c.isActive()
                             && c.getStatus() != CombatantStatus.DEAD)
                     .map(c -> {
@@ -207,7 +207,7 @@ public class EncounterService {
                     })
                     .toList();
 
-            DifficultyResult result = difficultyCalculator.calculate(party, monsters);
+            DifficultyResult result = difficultyCalculator.calculate(party, enemies);
             difficulty = DifficultyResponse.from(result);
         }
 

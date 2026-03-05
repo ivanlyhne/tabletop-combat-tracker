@@ -1,4 +1,4 @@
-export interface Monster {
+export interface Enemy {
   id: string;
   campaignId?: string;
   name: string;
@@ -24,7 +24,7 @@ export interface Monster {
   updatedAt: string;
 }
 
-export interface MonsterRequest {
+export interface EnemyRequest {
   name: string;
   ruleset?: string;
   challengeRating?: number;

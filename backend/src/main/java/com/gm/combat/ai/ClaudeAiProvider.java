@@ -120,9 +120,9 @@ public class ClaudeAiProvider implements AiProvider {
 
             String summary = node.path("narrativeSummary").asText("No summary provided.");
 
-            List<GeneratedMonster> monsters = new ArrayList<>();
+            List<GeneratedEnemy> enemies = new ArrayList<>();
             for (JsonNode m : node.path("monsters")) {
-                monsters.add(new GeneratedMonster(
+                enemies.add(new GeneratedEnemy(
                         m.path("name").asText("Unknown"),
                         m.path("count").asInt(1),
                         m.path("challengeRating").asText("1"),
@@ -136,7 +136,7 @@ public class ClaudeAiProvider implements AiProvider {
             List<String> positions = new ArrayList<>();
             for (JsonNode p : node.path("suggestedPositions")) positions.add(p.asText());
 
-            return new GeneratedEncounter(summary, monsters, terrain, positions, text);
+            return new GeneratedEncounter(summary, enemies, terrain, positions, text);
 
         } catch (Exception e) {
             throw new AiException("Failed to parse Claude response: " + e.getMessage());

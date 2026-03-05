@@ -1,11 +1,11 @@
 package com.gm.combat.service;
 
-import com.gm.combat.dto.monster.MonsterRequest;
-import com.gm.combat.dto.monster.MonsterResponse;
+import com.gm.combat.dto.enemy.EnemyRequest;
+import com.gm.combat.dto.enemy.EnemyResponse;
 import com.gm.combat.entity.Campaign;
-import com.gm.combat.entity.Monster;
+import com.gm.combat.entity.Enemy;
 import com.gm.combat.repository.CampaignRepository;
-import com.gm.combat.repository.MonsterRepository;
+import com.gm.combat.repository.EnemyRepository;
 import com.gm.combat.util.DiceParser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,9 +21,9 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class MonsterService {
+public class EnemyService {
 
-    private final MonsterRepository monsterRepository;
+    private final EnemyRepository enemyRepository;
     private final CampaignRepository campaignRepository;
 
     private Campaign requireCampaign(UUID campaignId, String userEmail) {
@@ -32,53 +32,53 @@ public class MonsterService {
     }
 
     @Transactional(readOnly = true)
-    public List<MonsterResponse> findByCampaign(UUID campaignId, String userEmail) {
+    public List<EnemyResponse> findByCampaign(UUID campaignId, String userEmail) {
         requireCampaign(campaignId, userEmail);
-        return monsterRepository.findByCampaignId(campaignId)
-                .stream().map(MonsterResponse::from).toList();
+        return enemyRepository.findByCampaignId(campaignId)
+                .stream().map(EnemyResponse::from).toList();
     }
 
     @Transactional(readOnly = true)
-    public List<MonsterResponse> findGlobal() {
-        return monsterRepository.findByCampaignIsNull()
-                .stream().map(MonsterResponse::from).toList();
+    public List<EnemyResponse> findGlobal() {
+        return enemyRepository.findByCampaignIsNull()
+                .stream().map(EnemyResponse::from).toList();
     }
 
     @Transactional(readOnly = true)
-    public MonsterResponse findById(UUID campaignId, UUID id, String userEmail) {
+    public EnemyResponse findById(UUID campaignId, UUID id, String userEmail) {
         requireCampaign(campaignId, userEmail);
-        return monsterRepository.findByIdAndCampaignId(id, campaignId)
-                .map(MonsterResponse::from)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Monster not found"));
+        return enemyRepository.findByIdAndCampaignId(id, campaignId)
+                .map(EnemyResponse::from)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Enemy not found"));
     }
 
-    public MonsterResponse create(UUID campaignId, MonsterRequest req, String userEmail) {
+    public EnemyResponse create(UUID campaignId, EnemyRequest req, String userEmail) {
         Campaign campaign = requireCampaign(campaignId, userEmail);
-        return MonsterResponse.from(monsterRepository.save(buildMonster(req, campaign)));
+        return EnemyResponse.from(enemyRepository.save(buildEnemy(req, campaign)));
     }
 
-    public MonsterResponse update(UUID campaignId, UUID id, MonsterRequest req, String userEmail) {
+    public EnemyResponse update(UUID campaignId, UUID id, EnemyRequest req, String userEmail) {
         requireCampaign(campaignId, userEmail);
-        Monster monster = monsterRepository.findByIdAndCampaignId(id, campaignId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Monster not found"));
-        applyRequest(monster, req);
-        return MonsterResponse.from(monsterRepository.save(monster));
+        Enemy enemy = enemyRepository.findByIdAndCampaignId(id, campaignId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Enemy not found"));
+        applyRequest(enemy, req);
+        return EnemyResponse.from(enemyRepository.save(enemy));
     }
 
     public void delete(UUID campaignId, UUID id, String userEmail) {
         requireCampaign(campaignId, userEmail);
-        Monster monster = monsterRepository.findByIdAndCampaignId(id, campaignId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Monster not found"));
-        monsterRepository.delete(monster);
+        Enemy enemy = enemyRepository.findByIdAndCampaignId(id, campaignId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Enemy not found"));
+        enemyRepository.delete(enemy);
     }
 
-    public List<MonsterResponse> duplicate(UUID campaignId, UUID id, int count, String userEmail) {
+    public List<EnemyResponse> duplicate(UUID campaignId, UUID id, int count, String userEmail) {
         Campaign campaign = requireCampaign(campaignId, userEmail);
-        Monster source = monsterRepository.findByIdAndCampaignId(id, campaignId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Monster not found"));
-        List<Monster> copies = new ArrayList<>();
+        Enemy source = enemyRepository.findByIdAndCampaignId(id, campaignId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Enemy not found"));
+        List<Enemy> copies = new ArrayList<>();
         for (int i = 1; i <= count; i++) {
-            Monster copy = Monster.builder()
+            Enemy copy = Enemy.builder()
                     .campaign(campaign)
                     .name(source.getName() + " " + i)
                     .ruleset(source.getRuleset())
@@ -102,12 +102,12 @@ public class MonsterService {
                     .build();
             copies.add(copy);
         }
-        return monsterRepository.saveAll(copies).stream().map(MonsterResponse::from).toList();
+        return enemyRepository.saveAll(copies).stream().map(EnemyResponse::from).toList();
     }
 
-    private Monster buildMonster(MonsterRequest req, Campaign campaign) {
+    private Enemy buildEnemy(EnemyRequest req, Campaign campaign) {
         int hpAvg = req.hpAverage() != null ? req.hpAverage() : DiceParser.average(req.hpFormula());
-        return Monster.builder()
+        return Enemy.builder()
                 .campaign(campaign)
                 .name(req.name())
                 .ruleset(req.ruleset() != null ? req.ruleset() : "DND_5E")
@@ -131,28 +131,28 @@ public class MonsterService {
                 .build();
     }
 
-    private void applyRequest(Monster monster, MonsterRequest req) {
-        monster.setName(req.name());
-        if (req.ruleset() != null) monster.setRuleset(req.ruleset());
-        monster.setChallengeRating(req.challengeRating());
-        monster.setXpValue(req.xpValue());
-        if (req.armorClass() > 0) monster.setArmorClass(req.armorClass());
-        monster.setHpFormula(req.hpFormula());
+    private void applyRequest(Enemy enemy, EnemyRequest req) {
+        enemy.setName(req.name());
+        if (req.ruleset() != null) enemy.setRuleset(req.ruleset());
+        enemy.setChallengeRating(req.challengeRating());
+        enemy.setXpValue(req.xpValue());
+        if (req.armorClass() > 0) enemy.setArmorClass(req.armorClass());
+        enemy.setHpFormula(req.hpFormula());
         int computedHpAverage = req.hpAverage() != null
                 ? req.hpAverage()
                 : DiceParser.average(req.hpFormula());
-        monster.setHpAverage(computedHpAverage);
-        if (req.speed() != null) monster.setSpeed(req.speed());
-        if (req.savingThrows() != null) monster.setSavingThrows(req.savingThrows());
-        if (req.skills() != null) monster.setSkills(req.skills());
-        if (req.damageResistances() != null) monster.setDamageResistances(req.damageResistances());
-        if (req.damageImmunities() != null) monster.setDamageImmunities(req.damageImmunities());
-        if (req.damageVulnerabilities() != null) monster.setDamageVulnerabilities(req.damageVulnerabilities());
-        if (req.conditionImmunities() != null) monster.setConditionImmunities(req.conditionImmunities());
-        if (req.traits() != null) monster.setTraits(req.traits());
-        if (req.actions() != null) monster.setActions(req.actions());
-        if (req.environmentTags() != null) monster.setEnvironmentTags(req.environmentTags());
-        monster.setExternalId(req.externalId());
-        if (req.extraAttributes() != null) monster.setExtraAttributes(req.extraAttributes());
+        enemy.setHpAverage(computedHpAverage);
+        if (req.speed() != null) enemy.setSpeed(req.speed());
+        if (req.savingThrows() != null) enemy.setSavingThrows(req.savingThrows());
+        if (req.skills() != null) enemy.setSkills(req.skills());
+        if (req.damageResistances() != null) enemy.setDamageResistances(req.damageResistances());
+        if (req.damageImmunities() != null) enemy.setDamageImmunities(req.damageImmunities());
+        if (req.damageVulnerabilities() != null) enemy.setDamageVulnerabilities(req.damageVulnerabilities());
+        if (req.conditionImmunities() != null) enemy.setConditionImmunities(req.conditionImmunities());
+        if (req.traits() != null) enemy.setTraits(req.traits());
+        if (req.actions() != null) enemy.setActions(req.actions());
+        if (req.environmentTags() != null) enemy.setEnvironmentTags(req.environmentTags());
+        enemy.setExternalId(req.externalId());
+        if (req.extraAttributes() != null) enemy.setExtraAttributes(req.extraAttributes());
     }
 }

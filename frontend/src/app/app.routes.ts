@@ -21,9 +21,9 @@ export const routes: Routes = [
     loadComponent: () => import('./features/characters/character-list/character-list.component').then(m => m.CharacterListComponent),
   },
   {
-    path: 'campaigns/:campaignId/monsters',
+    path: 'campaigns/:campaignId/enemies',
     canActivate: [authGuard],
-    loadComponent: () => import('./features/monsters/monster-list/monster-list.component').then(m => m.MonsterListComponent),
+    loadComponent: () => import('./features/enemies/enemy-list/enemy-list.component').then(m => m.EnemyListComponent),
   },
   {
     path: 'campaigns/:campaignId/encounters/new',

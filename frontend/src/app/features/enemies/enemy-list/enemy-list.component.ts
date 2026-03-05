@@ -6,12 +6,12 @@ import { MatTableModule } from '@angular/material/table';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MonsterService } from '../../../core/api/monster.service';
-import { Monster } from '../../../shared/models/monster.model';
-import { MonsterFormComponent } from '../monster-form/monster-form.component';
+import { EnemyService } from '../../../core/api/enemy.service';
+import { Enemy } from '../../../shared/models/enemy.model';
+import { EnemyFormComponent } from '../enemy-form/enemy-form.component';
 
 @Component({
-  selector: 'gm-monster-list',
+  selector: 'app-enemy-list',
   standalone: true,
   imports: [
     MatButtonModule,
@@ -24,23 +24,23 @@ import { MonsterFormComponent } from '../monster-form/monster-form.component';
   template: `
     <div class="page-content">
       <div class="page-header">
-        <h2>Monsters</h2>
+        <h2>Enemies</h2>
         <div class="header-actions">
           <button mat-stroked-button (click)="openForm()" style="margin-right: 8px">
-            <mat-icon>add</mat-icon> New Monster
+            <mat-icon>add</mat-icon> New Enemy
           </button>
         </div>
       </div>
 
       @if (loading()) {
         <div class="center"><mat-spinner></mat-spinner></div>
-      } @else if (monsters().length === 0) {
+      } @else if (enemies().length === 0) {
         <div class="empty-state">
           <mat-icon class="empty-icon">pest_control</mat-icon>
-          <p>No monsters yet. Add stat blocks to build your encounter library.</p>
+          <p>No enemies yet. Add stat blocks to build your encounter library.</p>
         </div>
       } @else {
-        <table mat-table [dataSource]="monsters()" class="monster-table">
+        <table mat-table [dataSource]="enemies()" class="enemy-table">
           <ng-container matColumnDef="name">
             <th mat-header-cell *matHeaderCellDef>Name</th>
             <td mat-cell *matCellDef="let m">{{ m.name }}</td>
@@ -75,7 +75,7 @@ import { MonsterFormComponent } from '../monster-form/monster-form.component';
               <button mat-icon-button title="Edit" (click)="openForm(m)">
                 <mat-icon>edit</mat-icon>
               </button>
-              <button mat-icon-button color="warn" title="Delete" (click)="deleteMonster(m)">
+              <button mat-icon-button color="warn" title="Delete" (click)="deleteEnemy(m)">
                 <mat-icon>delete</mat-icon>
               </button>
             </td>
@@ -91,21 +91,21 @@ import { MonsterFormComponent } from '../monster-form/monster-form.component';
     .page-content { padding: 24px 32px; }
     .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
     .page-header h2 { margin: 0; }
-    .monster-table { width: 100%; }
+    .enemy-table { width: 100%; }
     .center { display: flex; justify-content: center; padding: 48px; }
     .empty-state { text-align: center; padding: 48px; opacity: 0.6; }
     .empty-icon { font-size: 64px; width: 64px; height: 64px; }
   `],
 })
-export class MonsterListComponent implements OnInit {
+export class EnemyListComponent implements OnInit {
   router = inject(Router);
   private route = inject(ActivatedRoute);
-  private monsterService = inject(MonsterService);
+  private enemyService = inject(EnemyService);
   private dialog = inject(MatDialog);
   private snack = inject(MatSnackBar);
 
   private campaignId = this.route.snapshot.params['campaignId'];
-  monsters = signal<Monster[]>([]);
+  enemies = signal<Enemy[]>([]);
   loading = signal(true);
   displayedColumns = ['name', 'cr', 'xp', 'hp', 'ac', 'actions'];
 
@@ -113,39 +113,39 @@ export class MonsterListComponent implements OnInit {
 
   load() {
     this.loading.set(true);
-    this.monsterService.getAll(this.campaignId).subscribe({
-      next: data => { this.monsters.set(data); this.loading.set(false); },
-      error: () => { this.snack.open('Failed to load monsters', 'Close', { duration: 3000 }); this.loading.set(false); },
+    this.enemyService.getAll(this.campaignId).subscribe({
+      next: data => { this.enemies.set(data); this.loading.set(false); },
+      error: () => { this.snack.open('Failed to load enemies', 'Close', { duration: 3000 }); this.loading.set(false); },
     });
   }
 
-  openForm(monster?: Monster) {
-    const ref = this.dialog.open(MonsterFormComponent, { data: monster ?? null, width: '520px' });
+  openForm(enemy?: Enemy) {
+    const ref = this.dialog.open(EnemyFormComponent, { data: enemy ?? null, width: '520px' });
     ref.afterClosed().subscribe(result => {
       if (!result) return;
-      const op = monster
-        ? this.monsterService.update(this.campaignId, monster.id, result)
-        : this.monsterService.create(this.campaignId, result);
+      const op = enemy
+        ? this.enemyService.update(this.campaignId, enemy.id, result)
+        : this.enemyService.create(this.campaignId, result);
       op.subscribe({
-        next: () => { this.snack.open(monster ? 'Monster updated' : 'Monster created', '', { duration: 2000 }); this.load(); },
+        next: () => { this.snack.open(enemy ? 'Enemy updated' : 'Enemy created', '', { duration: 2000 }); this.load(); },
         error: () => this.snack.open('Operation failed', 'Close', { duration: 3000 }),
       });
     });
   }
 
-  duplicate(monster: Monster) {
+  duplicate(enemy: Enemy) {
     const count = parseInt(prompt('How many copies?', '1') ?? '1', 10);
     if (!count || count < 1) return;
-    this.monsterService.duplicate(this.campaignId, monster.id, count).subscribe({
+    this.enemyService.duplicate(this.campaignId, enemy.id, count).subscribe({
       next: () => { this.snack.open(`${count} copies created`, '', { duration: 2000 }); this.load(); },
       error: () => this.snack.open('Duplicate failed', 'Close', { duration: 3000 }),
     });
   }
 
-  deleteMonster(monster: Monster) {
-    if (!confirm(`Delete "${monster.name}"?`)) return;
-    this.monsterService.delete(this.campaignId, monster.id).subscribe({
-      next: () => { this.snack.open('Monster deleted', '', { duration: 2000 }); this.load(); },
+  deleteEnemy(enemy: Enemy) {
+    if (!confirm(`Delete "${enemy.name}"?`)) return;
+    this.enemyService.delete(this.campaignId, enemy.id).subscribe({
+      next: () => { this.snack.open('Enemy deleted', '', { duration: 2000 }); this.load(); },
       error: () => this.snack.open('Delete failed', 'Close', { duration: 3000 }),
     });
   }

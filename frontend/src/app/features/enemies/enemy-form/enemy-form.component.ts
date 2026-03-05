@@ -4,10 +4,10 @@ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/materia
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { Monster } from '../../../shared/models/monster.model';
+import { Enemy } from '../../../shared/models/enemy.model';
 
 @Component({
-  selector: 'gm-monster-form',
+  selector: 'app-enemy-form',
   standalone: true,
   imports: [
     ReactiveFormsModule,
@@ -17,7 +17,7 @@ import { Monster } from '../../../shared/models/monster.model';
     MatButtonModule,
   ],
   template: `
-    <h2 mat-dialog-title>{{ data?.id ? 'Edit Monster' : 'New Monster' }}</h2>
+    <h2 mat-dialog-title>{{ data?.id ? 'Edit Enemy' : 'New Enemy' }}</h2>
     <mat-dialog-content>
       <form [formGroup]="form" class="form-grid">
         <mat-form-field class="full-width">
@@ -74,10 +74,10 @@ import { Monster } from '../../../shared/models/monster.model';
     .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   `],
 })
-export class MonsterFormComponent {
+export class EnemyFormComponent {
   private fb = inject(FormBuilder);
-  private dialogRef = inject(MatDialogRef<MonsterFormComponent>);
-  readonly data: Monster | null = inject(MAT_DIALOG_DATA);
+  private dialogRef = inject(MatDialogRef<EnemyFormComponent>);
+  readonly data: Enemy | null = inject(MAT_DIALOG_DATA);
 
   form = this.fb.group({
     name: [this.data?.name ?? '', [Validators.required, Validators.maxLength(255)]],

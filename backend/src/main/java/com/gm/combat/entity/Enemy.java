@@ -18,7 +18,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "monsters")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-public class Monster {
+public class Enemy {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

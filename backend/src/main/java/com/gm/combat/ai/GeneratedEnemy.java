@@ -3,9 +3,9 @@ package com.gm.combat.ai;
 import java.util.Map;
 
 /**
- * A single monster type returned by the AI provider.
+ * A single enemy type returned by the AI provider.
  */
-public record GeneratedMonster(
+public record GeneratedEnemy(
         String name,
         int count,
         String challengeRating,

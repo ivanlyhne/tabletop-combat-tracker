@@ -7,7 +7,7 @@ import java.util.List;
  */
 public record GeneratedEncounter(
         String narrativeSummary,
-        List<GeneratedMonster> monsters,
+        List<GeneratedEnemy> enemies,
         List<String> terrainFeatures,
         List<String> suggestedPositions,
         String rawAiResponse
