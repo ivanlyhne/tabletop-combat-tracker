@@ -132,6 +132,25 @@ const SHORTCUTS = [
       } @else {
         <div class="content-area">
 
+          <!-- Guidance banner — collapsible -->
+          @if (showGuidance()) {
+            <div class="guidance-banner">
+              <mat-icon class="guidance-icon">info</mat-icon>
+              <div class="guidance-text">
+                @if (activeCombatant()) {
+                  <strong>{{ activeCombatant()!.displayName }}'s turn:</strong>
+                  Move their token on the map, then apply damage/healing or conditions using the panel on the left.
+                  Press <kbd>N</kbd> or click Next Turn to advance.
+                } @else {
+                  Set initiative for all combatants, then click <strong>Start Combat</strong> to begin.
+                }
+              </div>
+              <button mat-icon-button (click)="showGuidance.set(false)" class="guidance-close">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+          }
+
           <!-- Difficulty badge -->
           @if (encounter()!.difficulty) {
             <div class="difficulty-banner" [attr.data-level]="encounter()!.difficulty!.level">
@@ -178,15 +197,20 @@ const SHORTCUTS = [
           @if (selectedCombatant()) {
             <mat-card class="action-panel">
               <mat-card-header>
-                <mat-card-title>{{ selectedCombatant()!.displayName }}</mat-card-title>
-                <mat-card-subtitle>
-                  HP {{ selectedCombatant()!.currentHp }}/{{ selectedCombatant()!.maxHp }}
-                  @if (selectedCombatant()!.tempHp > 0) {
-                    (+{{ selectedCombatant()!.tempHp }} temp)
-                  }
-                  &nbsp;|&nbsp; AC {{ selectedCombatant()!.armorClass }}
-                  &nbsp;|&nbsp; Status: {{ selectedCombatant()!.status }}
-                </mat-card-subtitle>
+                <div class="action-header-row">
+                  <div class="init-badge">{{ selectedCombatant()!.initiativeValue ?? '—' }}</div>
+                  <div class="action-header-info">
+                    <mat-card-title>{{ selectedCombatant()!.displayName }}</mat-card-title>
+                    <mat-card-subtitle>
+                      HP {{ selectedCombatant()!.currentHp }}/{{ selectedCombatant()!.maxHp }}
+                      @if (selectedCombatant()!.tempHp > 0) {
+                        (+{{ selectedCombatant()!.tempHp }} temp)
+                      }
+                      &nbsp;|&nbsp; AC {{ selectedCombatant()!.armorClass }}
+                      &nbsp;|&nbsp; Status: {{ selectedCombatant()!.status }}
+                    </mat-card-subtitle>
+                  </div>
+                </div>
               </mat-card-header>
 
               <mat-card-content>
@@ -336,7 +360,7 @@ const SHORTCUTS = [
     }
     .shortcut-close {
       margin-left: auto; background: none; border: none;
-      cursor: pointer; font-size: 18px; color: rgba(0,0,0,.5);
+      cursor: pointer; font-size: 18px; color: rgba(255,255,255,0.75);
     }
     .shortcut-table { border-collapse: collapse; width: 100%; }
     .shortcut-table tr td { padding: 5px 8px; font-size: 14px; }
@@ -361,7 +385,7 @@ const SHORTCUTS = [
     .right-panel { flex: 1; display: flex; align-items: center; justify-content: center; background: #f5f5f5; }
     .map-placeholder {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      color: rgba(0,0,0,.3); gap: 8px;
+      color: rgba(255,255,255,0.75); gap: 8px;
     }
     .map-icon { font-size: 64px; width: 64px; height: 64px; }
     .map-placeholder p { margin: 0; font-size: 20px; }
@@ -372,10 +396,12 @@ const SHORTCUTS = [
       border-top: 2px solid #3f51b5;
       max-height: 320px; overflow-y: auto;
     }
+    .action-header-row { display: flex; align-items: center; gap: 12px; }
+    .action-header-info { display: flex; flex-direction: column; }
     .action-grid { display: flex; flex-wrap: wrap; gap: 12px; padding: 8px 0; }
     .action-group { display: flex; flex-direction: column; gap: 4px; }
     .action-label {
-      font-size: 11px; font-weight: 600; color: rgba(0,0,0,.6);
+      font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.75);
       text-transform: uppercase; display: flex; align-items: center; gap: 6px;
     }
     .input-row { display: flex; align-items: center; gap: 4px; }
@@ -395,7 +421,41 @@ const SHORTCUTS = [
     .condition-group.expanded { flex-basis: 100%; }
     .toggle-picker-btn {
       font-size: 10px; background: none; border: 1px solid #bdbdbd;
-      border-radius: 4px; cursor: pointer; padding: 1px 5px; color: rgba(0,0,0,.5);
+      border-radius: 4px; cursor: pointer; padding: 1px 5px; color: rgba(255,255,255,0.75);
+    }
+
+    /* Guidance banner */
+    .guidance-banner {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(124, 58, 237, 0.18);
+      border: 1px solid rgba(124, 58, 237, 0.4);
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin: 8px 12px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.85);
+      flex-shrink: 0;
+    }
+    .guidance-icon { color: #9c6fe4; font-size: 20px; width: 20px; height: 20px; }
+    .guidance-text { flex: 1; line-height: 1.4; }
+    .guidance-text strong { color: #fff; }
+    .guidance-text kbd {
+      background: rgba(255,255,255,0.12);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 12px;
+      font-family: monospace;
+    }
+    .guidance-close { flex-shrink: 0; }
+    .init-badge {
+      font-size: 22px;
+      font-weight: 900;
+      color: #ffd700;
+      min-width: 36px;
+      text-align: center;
+      line-height: 1;
     }
   `],
 })
@@ -420,6 +480,7 @@ export class CombatViewComponent implements OnInit {
   conditionList = signal<ConditionDefinition[]>([]);
   showConditionPicker = signal(false);
   showHelp = signal(false);
+  showGuidance = signal(true);
 
   readonly STATUS_LABEL = STATUS_LABEL;
   readonly shortcuts = SHORTCUTS;
@@ -435,6 +496,13 @@ export class CombatViewComponent implements OnInit {
     const enc = this.encounter();
     if (!enc || enc.initiativeOrder.length === 0) return null;
     return enc.initiativeOrder[enc.activeCombatantIndex] ?? null;
+  });
+
+  activeCombatant = computed(() => {
+    const enc = this.encounter();
+    const id = this.activeCombatantId();
+    if (!enc || !id) return null;
+    return enc.combatants.find(c => c.id === id) ?? null;
   });
 
   ngOnInit() {
