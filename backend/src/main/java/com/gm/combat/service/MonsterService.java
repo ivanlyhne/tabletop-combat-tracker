@@ -106,10 +106,7 @@ public class MonsterService {
     }
 
     private Monster buildMonster(MonsterRequest req, Campaign campaign) {
-        int computedHpAverage = req.hpAverage() != null
-                ? req.hpAverage()
-                : DiceParser.average(req.hpFormula());
-        int hpAvg = computedHpAverage;
+        int hpAvg = req.hpAverage() != null ? req.hpAverage() : DiceParser.average(req.hpFormula());
         return Monster.builder()
                 .campaign(campaign)
                 .name(req.name())
