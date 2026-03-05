@@ -93,20 +93,7 @@ const ENVIRONMENT_TAGS = ['dungeon', 'forest', 'city', 'cave', 'underwater', 'mo
                 <textarea matInput formControlName="description" rows="2"></textarea>
               </mat-form-field>
 
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Objectives</mat-label>
-                <textarea matInput formControlName="objectives" rows="2"></textarea>
-              </mat-form-field>
 
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Terrain Notes</mat-label>
-                <textarea matInput formControlName="terrainNotes" rows="2"></textarea>
-              </mat-form-field>
-
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Loot Notes</mat-label>
-                <textarea matInput formControlName="lootNotes" rows="2"></textarea>
-              </mat-form-field>
             </section>
 
             <mat-divider></mat-divider>
@@ -185,7 +172,10 @@ const ENVIRONMENT_TAGS = ['dungeon', 'forest', 'city', 'cave', 'underwater', 'mo
             <!-- Difficulty Preview -->
             <section class="section difficulty-section">
               <h3 class="section-title">Estimated Difficulty</h3>
-              <div class="difficulty-badge" [style.background-color]="difficultyColor()">
+              <div class="difficulty-badge"
+                   [style.background-color]="difficultyColor()"
+                   matTooltip="Based on adjusted XP per party member vs D&D 5e thresholds. Multiplier applied for multiple monsters."
+                   matTooltipPosition="right">
                 {{ estimatedDifficulty() }}
               </div>
               <span class="difficulty-hint">
@@ -214,21 +204,51 @@ const ENVIRONMENT_TAGS = ['dungeon', 'forest', 'city', 'cave', 'underwater', 'mo
   `,
   styles: [`
     .setup-container {
-      max-width: 720px;
-      margin: 24px auto;
-      padding: 0 16px;
+      padding: 16px 32px;
+      max-width: 860px;
+      margin: 0 auto;
+      overflow-y: auto;
+      height: 100%;
+      box-sizing: border-box;
     }
     .setup-card { padding-bottom: 16px; }
     .form-grid { display: flex; flex-direction: column; gap: 16px; }
     .section { display: flex; flex-direction: column; gap: 8px; padding: 8px 0; }
     .section-header { display: flex; align-items: center; justify-content: space-between; }
-    .section-title { margin: 0 0 4px; font-size: 14px; font-weight: 600; color: rgba(0,0,0,.6); }
+    .section-title {
+      margin: 0 0 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.75);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
     .ai-btn { height: 32px; font-size: 13px; line-height: 32px; }
     .full-width { width: 100%; }
     .empty-hint { color: rgba(0,0,0,.4); font-size: 13px; margin: 0; }
-    .monster-picker { display: flex; flex-direction: column; gap: 4px; max-height: 260px; overflow-y: auto; }
-    .monster-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; }
-    .monster-name { font-size: 14px; }
+    .monster-picker {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-height: 260px;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    .monster-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 0;
+      min-width: 0;
+    }
+    .monster-name {
+      font-size: 14px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      min-width: 0;
+    }
     .cr-chip, .xp-chip {
       display: inline-block; font-size: 11px; border-radius: 4px;
       padding: 1px 5px; margin-left: 6px; color: white; background: #607d8b;
@@ -268,9 +288,6 @@ export class EncounterSetupComponent implements OnInit {
   form = this.fb.group({
     name:           ['', Validators.required],
     description:    [''],
-    objectives:     [''],
-    terrainNotes:   [''],
-    lootNotes:      [''],
     environmentTag: [''],
   });
 
@@ -340,7 +357,7 @@ export class EncounterSetupComponent implements OnInit {
       partyMembers,
       environment: v.environmentTag || undefined,
       difficultyTarget: 'MEDIUM',
-      freeText: [v.description, v.objectives].filter(Boolean).join(' ') || undefined,
+      freeText: [v.description].filter(Boolean).join(' ') || undefined,
       maxMonsterCount: 8,
     };
 
@@ -375,11 +392,6 @@ export class EncounterSetupComponent implements OnInit {
           this.form.patchValue({ description: res.narrativeSummary });
         }
 
-        // Populate terrain features into terrainNotes if currently blank
-        if (!v.terrainNotes && res.terrainFeatures.length > 0) {
-          this.form.patchValue({ terrainNotes: res.terrainFeatures.join(', ') });
-        }
-
         const matchMsg = matched > 0
           ? `Matched ${matched} of ${res.monsters.length} monster type(s) from your library.`
           : `No monsters matched your campaign library.`;
@@ -408,9 +420,6 @@ export class EncounterSetupComponent implements OnInit {
     this.encounterService.create(this.campaignId(), {
       name:           v.name!,
       description:    v.description || undefined,
-      objectives:     v.objectives || undefined,
-      terrainNotes:   v.terrainNotes || undefined,
-      lootNotes:      v.lootNotes || undefined,
       environmentTag: v.environmentTag || undefined,
     }).subscribe({
       next: (encounter) => this.addCombatants(encounter),
