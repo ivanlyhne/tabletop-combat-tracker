@@ -78,11 +78,21 @@ import { AiService } from '../../../core/api/ai.service';
                 </mat-hint>
               </mat-form-field>
 
-              <!-- Model Name -->
+              <!-- Model ID -->
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Model Name</mat-label>
+                <mat-label>Model ID</mat-label>
                 <input matInput formControlName="modelName" [placeholder]="providerDefaultModel()">
-                <mat-hint>Leave blank to use the default model for this provider</mat-hint>
+                <mat-hint>
+                  Leave blank for default.
+                  @if (form.value.provider === 'CLAUDE') {
+                    <a href="https://docs.anthropic.com/en/docs/about-claude/models/all-models"
+                       target="_blank" rel="noopener" class="model-link">Browse Claude models ↗</a>
+                  }
+                  @if (form.value.provider === 'PERPLEXITY') {
+                    <a href="https://docs.perplexity.ai/guides/model-cards"
+                       target="_blank" rel="noopener" class="model-link">Browse Perplexity models ↗</a>
+                  }
+                </mat-hint>
               </mat-form-field>
 
               <!-- Max Tokens + Temperature -->
@@ -192,6 +202,8 @@ import { AiService } from '../../../core/api/ai.service';
       margin-bottom: 16px;
       font-size: 14px;
     }
+    .model-link { color: #b39ddb; text-decoration: none; margin-left: 4px; }
+    .model-link:hover { text-decoration: underline; }
   `],
 })
 export class AiSettingsComponent implements OnInit {
