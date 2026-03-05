@@ -1,6 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
@@ -15,7 +14,6 @@ import { MonsterFormComponent } from '../monster-form/monster-form.component';
   selector: 'gm-monster-list',
   standalone: true,
   imports: [
-    MatToolbarModule,
     MatButtonModule,
     MatIconModule,
     MatTableModule,
@@ -24,14 +22,6 @@ import { MonsterFormComponent } from '../monster-form/monster-form.component';
     MatProgressSpinnerModule,
   ],
   template: `
-    <mat-toolbar color="primary">
-      <button mat-icon-button (click)="router.navigate(['/campaigns'])" title="Back">
-        <mat-icon>arrow_back</mat-icon>
-      </button>
-      <span>Monsters</span>
-      <span class="spacer"></span>
-    </mat-toolbar>
-
     <div class="page-content">
       <div class="page-header">
         <h2>Monsters</h2>
@@ -98,7 +88,6 @@ import { MonsterFormComponent } from '../monster-form/monster-form.component';
     </div>
   `,
   styles: [`
-    .spacer { flex: 1; }
     .page-content { padding: 24px; max-width: 1000px; margin: 0 auto; }
     .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
     .page-header h2 { margin: 0; }

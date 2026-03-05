@@ -190,6 +190,7 @@ export class BattleMapComponent implements AfterViewInit, OnChanges, OnDestroy {
         points: [x * cellSizePx, 0, x * cellSizePx, heightCells * cellSizePx],
         stroke: gridColor,
         strokeWidth: 1,
+        listening: false,
       }));
     }
     for (let y = 0; y <= heightCells; y++) {
@@ -197,6 +198,7 @@ export class BattleMapComponent implements AfterViewInit, OnChanges, OnDestroy {
         points: [0, y * cellSizePx, widthCells * cellSizePx, y * cellSizePx],
         stroke: gridColor,
         strokeWidth: 1,
+        listening: false,
       }));
     }
     this.gridLayer.draw();
@@ -223,6 +225,7 @@ export class BattleMapComponent implements AfterViewInit, OnChanges, OnDestroy {
           stroke: gridColor,
           strokeWidth: 1,
           closed: true,
+          listening: false,
         }));
       }
     }

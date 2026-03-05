@@ -307,7 +307,7 @@ const SHORTCUTS = [
     </div>
   `,
   styles: [`
-    :host { display: block; height: 100vh; overflow: hidden; }
+    :host { display: block; height: 100%; overflow: hidden; }
     .combat-layout { display: flex; flex-direction: column; height: 100%; position: relative; }
     .combat-toolbar { gap: 8px; }
     .encounter-name { font-size: 16px; font-weight: 600; }

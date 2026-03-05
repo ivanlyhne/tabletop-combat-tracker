@@ -437,24 +437,28 @@ export class EncounterSetupComponent implements OnInit {
 
     const allRequests = [...charRequests, ...monsterRequests];
     if (allRequests.length === 0) {
-      this.onSaveComplete();
+      this.onSaveComplete(encounter.id);
       return;
     }
 
     const adds = allRequests.map(req => this.encounterService.addCombatant(encounter.id, req));
     forkJoin(adds).subscribe({
-      next: () => this.onSaveComplete(),
+      next: () => this.onSaveComplete(encounter.id),
       error: () => {
         this.loading.set(false);
         this.snackBar.open('Encounter created but some combatants failed to add', 'Close', { duration: 4000 });
-        this.onSaveComplete();
+        this.onSaveComplete(encounter.id);
       },
     });
   }
 
-  private onSaveComplete() {
+  private onSaveComplete(encounterId?: string) {
     this.loading.set(false);
     this.snackBar.open('Encounter ready!', 'Close', { duration: 2500 });
-    this.router.navigate(['/campaigns']);
+    if (encounterId) {
+      this.router.navigate(['/encounters', encounterId, 'combat']);
+    } else {
+      this.router.navigate(['/campaigns']);
+    }
   }
 }

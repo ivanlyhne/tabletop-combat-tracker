@@ -146,7 +146,9 @@ public class EncounterService {
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Monster not found"));
 
             if (monster.getChallengeRating() != null) {
-                statsOverride.put("challengeRating", monster.getChallengeRating());
+                // Store as double so JSONB round-trip (BigDecimal→JSON→Double) is consistent
+                // and Hibernate dirty-check won't trigger a spurious UPDATE
+                statsOverride.put("challengeRating", monster.getChallengeRating().doubleValue());
             }
 
             return Combatant.builder()

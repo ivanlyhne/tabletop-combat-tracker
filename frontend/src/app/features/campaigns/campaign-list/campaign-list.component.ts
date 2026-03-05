@@ -1,13 +1,11 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { AuthService } from '../../../core/auth/auth.service';
 import { CampaignService } from '../../../core/api/campaign.service';
 import { Campaign } from '../../../shared/models/campaign.model';
 import { CampaignFormComponent } from '../campaign-form/campaign-form.component';
@@ -16,7 +14,6 @@ import { CampaignFormComponent } from '../campaign-form/campaign-form.component'
   selector: 'gm-campaign-list',
   standalone: true,
   imports: [
-    MatToolbarModule,
     MatButtonModule,
     MatIconModule,
     MatTableModule,
@@ -25,14 +22,6 @@ import { CampaignFormComponent } from '../campaign-form/campaign-form.component'
     MatProgressSpinnerModule,
   ],
   template: `
-    <mat-toolbar color="primary">
-      <span>GM Combat Tracker</span>
-      <span class="spacer"></span>
-      <button mat-icon-button (click)="auth.logout()" title="Logout">
-        <mat-icon>logout</mat-icon>
-      </button>
-    </mat-toolbar>
-
     <div class="page-content">
       <div class="page-header">
         <h2>My Campaigns</h2>
@@ -71,6 +60,9 @@ import { CampaignFormComponent } from '../campaign-form/campaign-form.component'
               <button mat-icon-button color="accent" title="Monsters" (click)="goToMonsters(c)">
                 <mat-icon>pest_control</mat-icon>
               </button>
+              <button mat-icon-button color="primary" title="Encounters" (click)="goToEncounters(c)">
+                <mat-icon>local_fire_department</mat-icon>
+              </button>
               <button mat-icon-button title="Edit" (click)="openForm(c)">
                 <mat-icon>edit</mat-icon>
               </button>
@@ -86,7 +78,6 @@ import { CampaignFormComponent } from '../campaign-form/campaign-form.component'
     </div>
   `,
   styles: [`
-    .spacer { flex: 1; }
     .page-content { padding: 24px; max-width: 1000px; margin: 0 auto; }
     .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
     .page-header h2 { margin: 0; }
@@ -98,7 +89,6 @@ import { CampaignFormComponent } from '../campaign-form/campaign-form.component'
   `],
 })
 export class CampaignListComponent implements OnInit {
-  auth = inject(AuthService);
   private campaignService = inject(CampaignService);
   private dialog = inject(MatDialog);
   private snack = inject(MatSnackBar);
@@ -142,5 +132,6 @@ export class CampaignListComponent implements OnInit {
 
   goToCharacters(campaign: Campaign) { this.router.navigate(['/campaigns', campaign.id, 'characters']); }
   goToMonsters(campaign: Campaign) { this.router.navigate(['/campaigns', campaign.id, 'monsters']); }
+  goToEncounters(campaign: Campaign) { this.router.navigate(['/campaigns', campaign.id, 'encounters', 'new']); }
   rulesetLabel(ruleset: string): string { return ruleset === 'DND_5E' ? 'D&D 5e' : ruleset; }
 }
