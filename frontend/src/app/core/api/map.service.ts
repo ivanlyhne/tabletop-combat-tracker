@@ -43,6 +43,16 @@ export class MapApiService {
     return this.http.get<AnnotationConfig[]>(`${this.base}/encounters/${encounterId}/annotations`);
   }
 
+  // ── Public player endpoints (no auth required) ────────────────────────────
+
+  getByIdPublic(mapId: string): Observable<MapConfig> {
+    return this.http.get<MapConfig>(`${this.base}/player/maps/${mapId}`);
+  }
+
+  getAnnotationsPublic(encounterId: string): Observable<AnnotationConfig[]> {
+    return this.http.get<AnnotationConfig[]>(`${this.base}/player/encounters/${encounterId}/annotations`);
+  }
+
   createAnnotation(encounterId: string, req: AnnotationRequest): Observable<AnnotationConfig> {
     return this.http.post<AnnotationConfig>(`${this.base}/encounters/${encounterId}/annotations`, req);
   }

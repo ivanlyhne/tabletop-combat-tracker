@@ -9,7 +9,10 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { StompService } from '../../core/websocket/stomp.service';
+import { MapApiService } from '../../core/api/map.service';
 import { Encounter } from '../../shared/models/encounter.model';
+import { MapConfig, AnnotationConfig } from '../../shared/models/map.model';
+import { BattleMapComponent } from '../map/battle-map/battle-map.component';
 import { environment } from '../../../environments/environment';
 
 @Component({
@@ -19,6 +22,7 @@ import { environment } from '../../../environments/environment';
     CommonModule,
     MatProgressSpinnerModule, MatChipsModule, MatCardModule,
     MatIconModule, MatToolbarModule,
+    BattleMapComponent,
   ],
   template: `
     <div class="player-layout">
@@ -105,6 +109,20 @@ import { environment } from '../../../environments/environment';
               </mat-card>
             }
           </div>
+
+          <!-- Battle Map (read-only) -->
+          @if (encounter()?.mapId && activeMap()) {
+            <div class="player-map-container">
+              <gm-battle-map
+                [map]="activeMap()!"
+                [combatants]="encounter()!.combatants"
+                [activeCombatantId]="activeCombatantId()"
+                [encounterId]="encounterId"
+                [annotations]="annotations()"
+                [readonly]="true">
+              </gm-battle-map>
+            </div>
+          }
 
           @if (encounter()!.combatants.length === 0) {
             <div class="empty-state">
@@ -214,15 +232,28 @@ import { environment } from '../../../environments/environment';
       gap: 12px; color: #555; margin-top: 60px; font-size: 18px;
     }
     .empty-state mat-icon { font-size: 48px; width: 48px; height: 48px; }
+
+    .player-map-container {
+      height: 60vh;
+      margin-top: 16px;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
   `],
 })
 export class PlayerViewComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private http = inject(HttpClient);
   private stomp = inject(StompService);
+  private mapApi = inject(MapApiService);
   private destroyRef = inject(DestroyRef);
 
+  encounterId = this.route.snapshot.paramMap.get('encounterId')!;
+
   encounter = signal<Encounter | null>(null);
+  activeMap = signal<MapConfig | null>(null);
+  annotations = signal<AnnotationConfig[]>([]);
 
   activeCombatantId = computed(() => {
     const enc = this.encounter();
@@ -238,11 +269,19 @@ export class PlayerViewComponent implements OnInit {
   });
 
   ngOnInit() {
-    const id = this.route.snapshot.paramMap.get('encounterId')!;
+    const id = this.encounterId;
 
     // Public endpoint — no auth header needed
     this.http.get<Encounter>(`${environment.apiUrl}/player/encounters/${id}`)
-      .subscribe({ next: enc => this.encounter.set(enc) });
+      .subscribe({
+        next: enc => {
+          this.encounter.set(enc);
+          if (enc.mapId) {
+            this.mapApi.getByIdPublic(enc.mapId).subscribe(map => this.activeMap.set(map));
+            this.mapApi.getAnnotationsPublic(id).subscribe(anns => this.annotations.set(anns));
+          }
+        }
+      });
 
     // Real-time updates via STOMP (WebSocket is unauthenticated)
     this.stomp.subscribeToEncounter(id)
@@ -254,6 +293,10 @@ export class PlayerViewComponent implements OnInit {
           combatants: msg.encounterState.combatants.filter(c => c.visibleToPlayers || c.playerCharacter),
         };
         this.encounter.set(filtered as Encounter);
+        // Reload annotations on state updates in case GM added/removed some
+        if (filtered.mapId) {
+          this.mapApi.getAnnotationsPublic(id).subscribe(anns => this.annotations.set(anns));
+        }
       });
   }
 

@@ -3,9 +3,13 @@ package com.gm.combat.controller;
 import com.gm.combat.dto.encounter.CombatantResponse;
 import com.gm.combat.dto.encounter.DifficultyResponse;
 import com.gm.combat.dto.encounter.EncounterResponse;
+import com.gm.combat.dto.map.AnnotationResponse;
+import com.gm.combat.dto.map.MapResponse;
 import com.gm.combat.entity.Encounter;
+import com.gm.combat.repository.AnnotationRepository;
 import com.gm.combat.repository.CombatantRepository;
 import com.gm.combat.repository.EncounterRepository;
+import com.gm.combat.repository.MapRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +31,8 @@ public class PlayerController {
 
     private final EncounterRepository encounterRepository;
     private final CombatantRepository combatantRepository;
+    private final MapRepository mapRepository;
+    private final AnnotationRepository annotationRepository;
 
     @GetMapping("/encounters/{encounterId}")
     public EncounterResponse getEncounter(@PathVariable UUID encounterId) {
@@ -63,5 +69,23 @@ public class PlayerController {
                 encounter.getCreatedAt(),
                 encounter.getUpdatedAt()
         );
+    }
+
+    /** Public read-only map config for the player view. */
+    @GetMapping("/maps/{mapId}")
+    public MapResponse getMap(@PathVariable UUID mapId) {
+        return MapResponse.from(
+                mapRepository.findById(mapId)
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Map not found"))
+        );
+    }
+
+    /** Public read-only annotations list for the player view. */
+    @GetMapping("/encounters/{encounterId}/annotations")
+    public List<AnnotationResponse> getAnnotations(@PathVariable UUID encounterId) {
+        return annotationRepository.findByEncounterId(encounterId)
+                .stream()
+                .map(AnnotationResponse::from)
+                .toList();
     }
 }

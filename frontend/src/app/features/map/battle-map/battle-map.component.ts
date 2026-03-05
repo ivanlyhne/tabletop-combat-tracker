@@ -22,26 +22,28 @@ type ActiveTool = 'select' | 'marker' | 'area' | 'text';
   standalone: true,
   imports: [CommonModule, MatButtonToggleModule, MatIconModule, MatTooltipModule, OverlayModule],
   template: `
-    <!-- Toolbar -->
-    <div class="map-toolbar">
-      <mat-button-toggle-group [(value)]="activeTool" class="tool-group">
-        <mat-button-toggle value="select" matTooltip="Select / Move tokens">
-          <mat-icon>pan_tool</mat-icon>
-        </mat-button-toggle>
-        <mat-button-toggle value="marker" matTooltip="Place marker">
-          <mat-icon>place</mat-icon>
-        </mat-button-toggle>
-        <mat-button-toggle value="area" matTooltip="Draw area">
-          <mat-icon>radio_button_unchecked</mat-icon>
-        </mat-button-toggle>
-        <mat-button-toggle value="text" matTooltip="Add label">
-          <mat-icon>text_fields</mat-icon>
-        </mat-button-toggle>
-      </mat-button-toggle-group>
-      <span class="grid-info">
-        {{ map.widthCells }}×{{ map.heightCells }} cells · {{ map.cellSizeFt }}ft/cell
-      </span>
-    </div>
+    <!-- Toolbar (GM only) -->
+    @if (!readonly) {
+      <div class="map-toolbar">
+        <mat-button-toggle-group [(value)]="activeTool" class="tool-group">
+          <mat-button-toggle value="select" matTooltip="Select / Move tokens">
+            <mat-icon>pan_tool</mat-icon>
+          </mat-button-toggle>
+          <mat-button-toggle value="marker" matTooltip="Place marker">
+            <mat-icon>place</mat-icon>
+          </mat-button-toggle>
+          <mat-button-toggle value="area" matTooltip="Draw area">
+            <mat-icon>radio_button_unchecked</mat-icon>
+          </mat-button-toggle>
+          <mat-button-toggle value="text" matTooltip="Add label">
+            <mat-icon>text_fields</mat-icon>
+          </mat-button-toggle>
+        </mat-button-toggle-group>
+        <span class="grid-info">
+          {{ map.widthCells }}×{{ map.heightCells }} cells · {{ map.cellSizeFt }}ft/cell
+        </span>
+      </div>
+    }
 
     <!-- Konva canvas container -->
     <div class="map-scroll-wrapper">
@@ -74,6 +76,7 @@ export class BattleMapComponent implements AfterViewInit, OnChanges, OnDestroy {
   @Input() activeCombatantId: string | null = null;
   @Input() encounterId!: string;
   @Input() annotations: AnnotationConfig[] = [];
+  @Input() readonly = false;
 
   @Output() annotationCreated = new EventEmitter<AnnotationConfig>();
   @Output() annotationDeleted = new EventEmitter<string>();
@@ -268,7 +271,7 @@ export class BattleMapComponent implements AfterViewInit, OnChanges, OnDestroy {
 
     const group = new Konva.Group({
       x, y,
-      draggable: this.activeTool === 'select',
+      draggable: !this.readonly && this.activeTool === 'select',
       id: combatant.id,
     });
 
@@ -441,16 +444,18 @@ export class BattleMapComponent implements AfterViewInit, OnChanges, OnDestroy {
       }));
     }
 
-    // Right-click to delete
-    group.on('contextmenu', (evt) => {
-      evt.evt.preventDefault();
-      evt.cancelBubble = true;
-      this.mapApi.deleteAnnotation(this.encounterId, ann.id).subscribe(() => {
-        group.destroy();
-        this.annotationLayer.draw();
-        this.annotationDeleted.emit(ann.id);
+    // Right-click to delete (GM only)
+    if (!this.readonly) {
+      group.on('contextmenu', (evt) => {
+        evt.evt.preventDefault();
+        evt.cancelBubble = true;
+        this.mapApi.deleteAnnotation(this.encounterId, ann.id).subscribe(() => {
+          group.destroy();
+          this.annotationLayer.draw();
+          this.annotationDeleted.emit(ann.id);
+        });
       });
-    });
+    }
 
     this.annotationLayer.add(group);
   }
@@ -458,6 +463,8 @@ export class BattleMapComponent implements AfterViewInit, OnChanges, OnDestroy {
   // ── Stage click → place annotation ───────────────────────────────────────
 
   private bindStageClick(): void {
+    if (this.readonly) return;
+
     this.stage.on('click', (evt) => {
       if (this.activeTool === 'select' || evt.target !== this.stage) return;
 
