@@ -64,6 +64,8 @@ public class PlayerController {
                 encounter.getInitiativeOrder(),
                 encounter.getEnvironmentTag(),
                 encounter.getDifficultyTarget(),
+                encounter.getBoardWidthCells(),
+                encounter.getBoardHeightCells(),
                 visibleCombatants,
                 null,   // difficulty — GM only
                 encounter.getCreatedAt(),

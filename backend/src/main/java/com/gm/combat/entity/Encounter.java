@@ -63,6 +63,12 @@ public class Encounter {
     @Column(name = "difficulty_target")
     private String difficultyTarget;
 
+    @Column(name = "board_width_cells", nullable = false)
+    private int boardWidthCells = 24;
+
+    @Column(name = "board_height_cells", nullable = false)
+    private int boardHeightCells = 16;
+
     @CreationTimestamp
     @Column(name = "created_at")
     private Instant createdAt;

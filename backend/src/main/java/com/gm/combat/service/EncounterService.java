@@ -66,6 +66,8 @@ public class EncounterService {
                 .initiativeOrder(new ArrayList<>())
                 .environmentTag(request.environmentTag())
                 .difficultyTarget(request.difficultyTarget())
+                .boardWidthCells(request.boardWidthCells() != null ? request.boardWidthCells() : 24)
+                .boardHeightCells(request.boardHeightCells() != null ? request.boardHeightCells() : 16)
                 .build();
         encounter = encounterRepository.save(encounter);
         return toResponse(encounter, List.of());
@@ -80,6 +82,8 @@ public class EncounterService {
         encounter.setLootNotes(request.lootNotes());
         encounter.setEnvironmentTag(request.environmentTag());
         encounter.setDifficultyTarget(request.difficultyTarget());
+        encounter.setBoardWidthCells(request.boardWidthCells() != null ? request.boardWidthCells() : 24);
+        encounter.setBoardHeightCells(request.boardHeightCells() != null ? request.boardHeightCells() : 16);
         encounterRepository.save(encounter);
         return toResponse(encounter, combatantRepository.findByEncounterId(id));
     }

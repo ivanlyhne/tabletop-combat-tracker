@@ -40,7 +40,7 @@ type ActiveTool = 'select' | 'marker' | 'area' | 'text';
           </mat-button-toggle>
         </mat-button-toggle-group>
         <span class="grid-info">
-          {{ map.widthCells }}×{{ map.heightCells }} cells · {{ map.cellSizeFt }}ft/cell
+          {{ boardWidthCells }}×{{ boardHeightCells }} cells · {{ map.cellSizeFt }}ft/cell
         </span>
       </div>
     }
@@ -77,6 +77,8 @@ export class BattleMapComponent implements AfterViewInit, OnChanges, OnDestroy {
   @Input() encounterId!: string;
   @Input() annotations: AnnotationConfig[] = [];
   @Input() readonly = false;
+  @Input() boardWidthCells = 24;
+  @Input() boardHeightCells = 16;
 
   @Output() annotationCreated = new EventEmitter<AnnotationConfig>();
   @Output() annotationDeleted = new EventEmitter<string>();
@@ -100,6 +102,12 @@ export class BattleMapComponent implements AfterViewInit, OnChanges, OnDestroy {
   private popupOverlayRef: OverlayRef | null = null;
   private selectedTokenId: string | null = null;
 
+  /** Effective cell size in pixels, derived from stage width and boardWidthCells input. */
+  private get effectiveCellSizePx(): number {
+    if (!this.stage) return this.map?.cellSizePx ?? 40;
+    return this.stage.width() / this.boardWidthCells;
+  }
+
   ngAfterViewInit(): void {
     this.initStage();
     this.drawAll();
@@ -115,8 +123,10 @@ export class BattleMapComponent implements AfterViewInit, OnChanges, OnDestroy {
       this.drawAnnotations();
     }
     if (changes['map'] && !changes['map'].firstChange) {
-      this.stage.width(this.map.widthCells * this.map.cellSizePx);
-      this.stage.height(this.map.heightCells * this.map.cellSizePx);
+      this.drawAll();
+    }
+    if ((changes['boardWidthCells'] || changes['boardHeightCells']) &&
+        !changes['boardWidthCells']?.firstChange && !changes['boardHeightCells']?.firstChange) {
       this.drawAll();
     }
   }
@@ -172,9 +182,10 @@ export class BattleMapComponent implements AfterViewInit, OnChanges, OnDestroy {
 
   private drawBackground(): void {
     this.bgLayer.destroyChildren();
-    const { widthCells, heightCells, cellSizePx, backgroundImageUrl } = this.map;
-    const w = widthCells * cellSizePx;
-    const h = heightCells * cellSizePx;
+    const cellSizePx = this.effectiveCellSizePx;
+    const backgroundImageUrl = this.map?.backgroundImageUrl;
+    const w = this.boardWidthCells * cellSizePx;
+    const h = this.boardHeightCells * cellSizePx;
 
     // Fill background
     this.bgLayer.add(new Konva.Rect({ x: 0, y: 0, width: w, height: h, fill: '#2d3748' }));
@@ -203,7 +214,10 @@ export class BattleMapComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   private drawSquareGrid(): void {
-    const { widthCells, heightCells, cellSizePx, gridColor } = this.map;
+    const cellSizePx = this.effectiveCellSizePx;
+    const gridColor = this.map?.gridColor ?? 'rgba(255,255,255,0.2)';
+    const widthCells = this.boardWidthCells;
+    const heightCells = this.boardHeightCells;
 
     for (let x = 0; x <= widthCells; x++) {
       this.gridLayer.add(new Konva.Line({
@@ -226,7 +240,10 @@ export class BattleMapComponent implements AfterViewInit, OnChanges, OnDestroy {
 
   /** Flat-top hex grid. Each cell's center: (col * hexWidth * 0.75, row * hexHeight + offset). */
   private drawHexGrid(): void {
-    const { widthCells, heightCells, cellSizePx, gridColor } = this.map;
+    const cellSizePx = this.effectiveCellSizePx;
+    const gridColor = this.map?.gridColor ?? 'rgba(255,255,255,0.2)';
+    const widthCells = this.boardWidthCells;
+    const heightCells = this.boardHeightCells;
     const r = cellSizePx / 2;
     const hexHeight = Math.sqrt(3) * r;
     const hexWidth = 2 * r;
@@ -264,7 +281,7 @@ export class BattleMapComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   private createToken(combatant: Combatant): Konva.Group {
-    const { cellSizePx } = this.map;
+    const cellSizePx = this.effectiveCellSizePx;
     const x = (combatant.positionX ?? 0) * cellSizePx;
     const y = (combatant.positionY ?? 0) * cellSizePx;
     const isActive = combatant.id === this.activeCombatantId;
@@ -414,7 +431,7 @@ export class BattleMapComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   private drawAnnotation(ann: AnnotationConfig): void {
-    const { cellSizePx } = this.map;
+    const cellSizePx = this.effectiveCellSizePx;
     const px = ann.position.x * cellSizePx;
     const py = ann.position.y * cellSizePx;
 
@@ -469,7 +486,7 @@ export class BattleMapComponent implements AfterViewInit, OnChanges, OnDestroy {
       if (this.activeTool === 'select' || evt.target !== this.stage) return;
 
       const pos = this.stage.getPointerPosition()!;
-      const { cellSizePx } = this.map;
+      const cellSizePx = this.effectiveCellSizePx;
       const gridX = Math.floor(pos.x / cellSizePx);
       const gridY = Math.floor(pos.y / cellSizePx);
 

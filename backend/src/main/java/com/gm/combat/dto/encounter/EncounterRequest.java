@@ -10,4 +10,6 @@ public record EncounterRequest(
         String lootNotes,
         String ruleset,
         String environmentTag,
-        String difficultyTarget) {}
+        String difficultyTarget,
+        Integer boardWidthCells,
+        Integer boardHeightCells) {}

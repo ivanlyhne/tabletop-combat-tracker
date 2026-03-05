@@ -1,0 +1,3 @@
+ALTER TABLE encounters
+  ADD COLUMN IF NOT EXISTS board_width_cells  INT NOT NULL DEFAULT 24,
+  ADD COLUMN IF NOT EXISTS board_height_cells INT NOT NULL DEFAULT 16;

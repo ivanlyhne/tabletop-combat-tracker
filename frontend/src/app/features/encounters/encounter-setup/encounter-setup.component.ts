@@ -93,6 +93,18 @@ const ENVIRONMENT_TAGS = ['dungeon', 'forest', 'city', 'cave', 'underwater', 'mo
                 <textarea matInput formControlName="description" rows="2"></textarea>
               </mat-form-field>
 
+              <div class="row-2">
+                <mat-form-field appearance="outline">
+                  <mat-label>Board Width (cells)</mat-label>
+                  <input matInput type="number" formControlName="boardWidthCells" min="8" max="50">
+                  <mat-hint>8–50 squares wide</mat-hint>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Board Height (cells)</mat-label>
+                  <input matInput type="number" formControlName="boardHeightCells" min="8" max="50">
+                  <mat-hint>8–50 squares tall</mat-hint>
+                </mat-form-field>
+              </div>
 
             </section>
 
@@ -225,6 +237,7 @@ const ENVIRONMENT_TAGS = ['dungeon', 'forest', 'city', 'cave', 'underwater', 'mo
     }
     .ai-btn { height: 32px; font-size: 13px; line-height: 32px; }
     .full-width { width: 100%; }
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     .empty-hint { color: rgba(0,0,0,.4); font-size: 13px; margin: 0; }
     .monster-picker {
       display: flex;
@@ -286,9 +299,11 @@ export class EncounterSetupComponent implements OnInit {
   environmentTags = ENVIRONMENT_TAGS;
 
   form = this.fb.group({
-    name:           ['', Validators.required],
-    description:    [''],
-    environmentTag: [''],
+    name:             ['', Validators.required],
+    description:      [''],
+    environmentTag:   [''],
+    boardWidthCells:  [24, [Validators.required, Validators.min(8), Validators.max(50)]],
+    boardHeightCells: [16, [Validators.required, Validators.min(8), Validators.max(50)]],
   });
 
   estimatedDifficulty = computed(() => {
@@ -418,9 +433,11 @@ export class EncounterSetupComponent implements OnInit {
     const v = this.form.value;
 
     this.encounterService.create(this.campaignId(), {
-      name:           v.name!,
-      description:    v.description || undefined,
-      environmentTag: v.environmentTag || undefined,
+      name:             v.name!,
+      description:      v.description || undefined,
+      environmentTag:   v.environmentTag || undefined,
+      boardWidthCells:  v.boardWidthCells ?? 24,
+      boardHeightCells: v.boardHeightCells ?? 16,
     }).subscribe({
       next: (encounter) => this.addCombatants(encounter),
       error: () => {

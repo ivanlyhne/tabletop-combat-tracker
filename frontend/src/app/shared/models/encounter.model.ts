@@ -14,6 +14,8 @@ export interface Encounter {
   initiativeOrder: string[];
   environmentTag?: string;
   difficultyTarget?: string;
+  boardWidthCells?: number;
+  boardHeightCells?: number;
   combatants: Combatant[];
   difficulty?: DifficultyInfo;
   createdAt: string;
@@ -64,6 +66,8 @@ export interface EncounterRequest {
   ruleset?: string;
   environmentTag?: string;
   difficultyTarget?: string;
+  boardWidthCells?: number;
+  boardHeightCells?: number;
 }
 
 export interface AddCombatantRequest {

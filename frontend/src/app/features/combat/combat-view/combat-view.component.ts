@@ -185,6 +185,8 @@ const SHORTCUTS = [
                   [activeCombatantId]="activeCombatantId()"
                   [encounterId]="encounter()!.id"
                   [annotations]="annotations()"
+                  [boardWidthCells]="encounter()?.boardWidthCells ?? 24"
+                  [boardHeightCells]="encounter()?.boardHeightCells ?? 16"
                   (annotationCreated)="onAnnotationCreated($event)"
                   (annotationDeleted)="onAnnotationDeleted($event)">
                 </gm-battle-map>
