@@ -71,6 +71,11 @@ const SHORTCUTS = [
         </span>
         <span class="spacer"></span>
 
+        <!-- Share player view link -->
+        <button mat-icon-button matTooltip="Copy player view link" (click)="copyPlayerLink()">
+          <mat-icon>share</mat-icon>
+        </button>
+
         <!-- Keyboard shortcut hint -->
         <button mat-icon-button matTooltip="Keyboard shortcuts (?)" (click)="toggleHelp()">
           <mat-icon>keyboard</mat-icon>
@@ -574,6 +579,15 @@ export class CombatViewComponent implements OnInit {
 
   toggleHelp() { this.showHelp.update(v => !v); }
   toggleConditionPicker() { this.showConditionPicker.update(v => !v); }
+
+  copyPlayerLink() {
+    const id = this.encounter()?.id;
+    if (!id) return;
+    const url = `${window.location.origin}/player/${id}`;
+    navigator.clipboard.writeText(url).then(() => {
+      this.snack.open('Player link copied!', '', { duration: 2500 });
+    });
+  }
 
   // ── Condition helpers ─────────────────────────────────────────────────────
 
