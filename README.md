@@ -27,10 +27,16 @@ A browser-based GM assistant for running turn-based combat encounters in Dungeon
 | 7 | Battle map (Konva.js canvas, tokens, hex/square grid, annotations) | ✅ Done |
 | 8 | AI encounter generation (Claude / Perplexity providers, settings UI) | ✅ Done |
 | 9 | Security hardening + unit test suite | ✅ Done |
-| 10 | Polish — conditions library, dice roller, player view, keyboard shortcuts | ✅ Done |
+| 10 | Polish — conditions library, dice roller, player view, keyboard shortcuts, persistent sidebar nav | ✅ Done |
 | 11 | JSON export / import, PWA shell | 🔲 Planned |
 
 ## Features
+
+### Navigation
+- Persistent 56px icon-only sidebar visible on all authenticated pages
+- Shield logo links to campaigns; icons for Campaigns, AI Settings, and Logout
+- Sidebar hidden automatically on login, register, and public player view routes
+- Active route is highlighted in purple; hover tooltips identify each icon
 
 ### Campaign Management
 - Create and manage campaigns, each with its own ruleset (DND_5E / GENERIC)
