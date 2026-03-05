@@ -94,7 +94,7 @@ import { CharacterFormComponent } from '../character-form/character-form.compone
     </div>
   `,
   styles: [`
-    .page-content { padding: 24px; max-width: 1000px; margin: 0 auto; }
+    .page-content { padding: 24px 32px; }
     .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
     .page-header h2 { margin: 0; }
     .char-table { width: 100%; }
