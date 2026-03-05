@@ -106,7 +106,10 @@ public class MonsterService {
     }
 
     private Monster buildMonster(MonsterRequest req, Campaign campaign) {
-        int hpAvg = req.hpAverage() > 0 ? req.hpAverage() : DiceParser.average(req.hpFormula());
+        int computedHpAverage = req.hpAverage() != null
+                ? req.hpAverage()
+                : DiceParser.average(req.hpFormula());
+        int hpAvg = computedHpAverage;
         return Monster.builder()
                 .campaign(campaign)
                 .name(req.name())
@@ -138,8 +141,10 @@ public class MonsterService {
         monster.setXpValue(req.xpValue());
         if (req.armorClass() > 0) monster.setArmorClass(req.armorClass());
         monster.setHpFormula(req.hpFormula());
-        int hpAvg = req.hpAverage() > 0 ? req.hpAverage() : DiceParser.average(req.hpFormula());
-        monster.setHpAverage(hpAvg);
+        int computedHpAverage = req.hpAverage() != null
+                ? req.hpAverage()
+                : DiceParser.average(req.hpFormula());
+        monster.setHpAverage(computedHpAverage);
         if (req.speed() != null) monster.setSpeed(req.speed());
         if (req.savingThrows() != null) monster.setSavingThrows(req.savingThrows());
         if (req.skills() != null) monster.setSkills(req.skills());

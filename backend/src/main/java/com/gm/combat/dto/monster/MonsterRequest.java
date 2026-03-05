@@ -14,7 +14,7 @@ public record MonsterRequest(
         Integer xpValue,
         @Min(1) int armorClass,
         String hpFormula,
-        @Min(1) int hpAverage,
+        Integer hpAverage,
         Map<String, Object> speed,
         Map<String, Object> savingThrows,
         Map<String, Object> skills,

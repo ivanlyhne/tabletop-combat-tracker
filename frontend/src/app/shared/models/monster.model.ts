@@ -7,7 +7,7 @@ export interface Monster {
   xpValue?: number;
   armorClass: number;
   hpFormula?: string;
-  hpAverage: number;
+  hpAverage?: number;
   speed: Record<string, number>;
   savingThrows: Record<string, number>;
   skills: Record<string, number>;
@@ -31,7 +31,7 @@ export interface MonsterRequest {
   xpValue?: number;
   armorClass: number;
   hpFormula?: string;
-  hpAverage: number;
+  hpAverage?: number;
   speed?: Record<string, number>;
   savingThrows?: Record<string, number>;
   skills?: Record<string, number>;

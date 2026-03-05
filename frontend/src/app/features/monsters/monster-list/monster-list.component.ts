@@ -57,8 +57,8 @@ import { MonsterFormComponent } from '../monster-form/monster-form.component';
           </ng-container>
 
           <ng-container matColumnDef="hp">
-            <th mat-header-cell *matHeaderCellDef>Avg HP</th>
-            <td mat-cell *matCellDef="let m">{{ m.hpAverage }} {{ m.hpFormula ? '(' + m.hpFormula + ')' : '' }}</td>
+            <th mat-header-cell *matHeaderCellDef>HP</th>
+            <td mat-cell *matCellDef="let m">{{ m.hpFormula || m.hpAverage }}</td>
           </ng-container>
 
           <ng-container matColumnDef="ac">

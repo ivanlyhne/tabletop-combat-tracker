@@ -40,20 +40,13 @@ import { Monster } from '../../../shared/models/monster.model';
           </mat-form-field>
         </div>
 
-        <div class="row-2">
-          <mat-form-field>
-            <mat-label>HP Formula (e.g. 2d8+4)</mat-label>
-            <input matInput formControlName="hpFormula" />
-          </mat-form-field>
-
-          <mat-form-field>
-            <mat-label>Average HP</mat-label>
-            <input matInput type="number" formControlName="hpAverage" min="1" />
-            @if (form.get('hpAverage')?.hasError('min')) {
-              <mat-error>Must be at least 1</mat-error>
-            }
-          </mat-form-field>
-        </div>
+        <mat-form-field class="full-width">
+          <mat-label>HP (e.g. 2d8+4 or 45)</mat-label>
+          <input matInput formControlName="hpFormula" />
+          @if (form.get('hpFormula')?.hasError('required') && form.get('hpFormula')?.touched) {
+            <mat-error>HP is required</mat-error>
+          }
+        </mat-form-field>
 
         <div class="row-2">
           <mat-form-field>
@@ -90,8 +83,7 @@ export class MonsterFormComponent {
     name: [this.data?.name ?? '', [Validators.required, Validators.maxLength(255)]],
     challengeRating: [this.data?.challengeRating ?? null],
     xpValue: [this.data?.xpValue ?? null],
-    hpFormula: [this.data?.hpFormula ?? ''],
-    hpAverage: [this.data?.hpAverage ?? 1, [Validators.required, Validators.min(1)]],
+    hpFormula: [this.data?.hpFormula ?? '', [Validators.required]],
     armorClass: [this.data?.armorClass ?? 10, [Validators.required, Validators.min(1)]],
     walkSpeed: [(this.data?.speed?.['walk'] as number) ?? 30],
   });
@@ -104,7 +96,6 @@ export class MonsterFormComponent {
         challengeRating: v.challengeRating,
         xpValue: v.xpValue,
         hpFormula: v.hpFormula,
-        hpAverage: v.hpAverage,
         armorClass: v.armorClass,
         speed: { walk: v.walkSpeed ?? 30 },
       });
