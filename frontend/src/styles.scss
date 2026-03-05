@@ -33,3 +33,22 @@ html, body {
   border-left: 4px solid #ffcc00 !important;
   background-color: rgba(255, 204, 0, 0.08) !important;
 }
+
+// Section headings — readable on dark background
+.section-title {
+  color: rgba(255, 255, 255, 0.75) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+// Tighter mat-form-field density globally
+.mat-mdc-form-field {
+  --mat-form-field-container-vertical-padding: 8px;
+}
+
+// Compact card content padding
+.mat-mdc-card-content {
+  padding: 8px 16px !important;
+}
