@@ -1,5 +1,5 @@
 import {
-  Component, OnInit, DestroyRef, inject, signal, computed, HostListener, ViewChild
+  Component, OnInit, DestroyRef, inject, signal, computed, HostListener
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -28,7 +28,6 @@ import { MapConfig, AnnotationConfig } from '../../../shared/models/map.model';
 import { InitiativeTrackerComponent } from '../initiative-tracker/initiative-tracker.component';
 import { BattleMapComponent } from '../../map/battle-map/battle-map.component';
 import { ConditionPickerComponent, ConditionSelection } from '../condition-picker/condition-picker.component';
-import { DiceRollerComponent } from '../dice-roller/dice-roller.component';
 
 const STATUS_LABEL: Record<string, string> = {
   DRAFT: 'Setup', SETUP: 'Setup', ACTIVE: 'Active',
@@ -39,7 +38,6 @@ const STATUS_LABEL: Record<string, string> = {
 const SHORTCUTS = [
   { key: 'N', description: 'Next turn' },
   { key: 'P', description: 'Pause / Resume combat' },
-  { key: 'D', description: 'Toggle dice roller' },
   { key: 'H', description: 'Focus Heal input' },
   { key: 'X', description: 'Focus Damage input' },
   { key: '?', description: 'Show / hide keyboard shortcuts' },
@@ -55,7 +53,7 @@ const SHORTCUTS = [
     MatDividerModule, MatProgressSpinnerModule, MatSnackBarModule, MatTooltipModule,
     MatDialogModule,
     InitiativeTrackerComponent, BattleMapComponent,
-    ConditionPickerComponent, DiceRollerComponent,
+    ConditionPickerComponent,
   ],
   template: `
     <div class="combat-layout">
@@ -333,8 +331,6 @@ const SHORTCUTS = [
         </div>
       }
 
-      <!-- Floating dice roller (always visible) -->
-      <app-dice-roller #diceRoller></app-dice-roller>
     </div>
   `,
   styles: [`
@@ -477,8 +473,6 @@ export class CombatViewComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   private snack = inject(MatSnackBar);
 
-  @ViewChild(DiceRollerComponent) diceRoller!: DiceRollerComponent;
-
   encounter = signal<Encounter | null>(null);
   selectedId = signal<string | null>(null);
   busy = signal(false);
@@ -555,10 +549,6 @@ export class CombatViewComponent implements OnInit {
         event.preventDefault();
         if (this.encounter()?.status === 'ACTIVE' && !this.busy()) this.pause();
         else if (this.encounter()?.status === 'PAUSED' && !this.busy()) this.resume();
-        break;
-      case 'd':
-        event.preventDefault();
-        this.diceRoller?.toggle();
         break;
       case 'h':
         event.preventDefault();
