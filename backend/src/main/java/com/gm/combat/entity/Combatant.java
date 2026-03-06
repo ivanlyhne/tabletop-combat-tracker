@@ -30,8 +30,8 @@ public class Combatant {
     @Column(name = "character_id")
     private UUID characterId;
 
-    @Column(name = "monster_id")
-    private UUID monsterId;
+    @Column(name = "enemy_id")
+    private UUID enemyId;
 
     @Column(name = "display_name", nullable = false)
     private String displayName;

@@ -10,7 +10,7 @@ import java.util.List;
  * @param environment     e.g. "dense forest", "underground dungeon"
  * @param difficultyTarget e.g. "MEDIUM", "HARD", "DEADLY"
  * @param freeText        any additional GM notes / narrative context
- * @param maxMonsterCount upper bound on monster variety (not total count)
+ * @param maxEnemyCount   upper bound on enemy variety (not total count)
  */
 public record EncounterPrompt(
         String ruleset,
@@ -18,5 +18,5 @@ public record EncounterPrompt(
         String environment,
         String difficultyTarget,
         String freeText,
-        int maxMonsterCount
+        int maxEnemyCount
 ) {}

@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @Entity
-@Table(name = "monsters")
+@Table(name = "enemies")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Enemy {
 

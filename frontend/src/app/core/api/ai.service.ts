@@ -23,7 +23,7 @@ export interface GenerateEncounterRequest {
   environment?: string;
   difficultyTarget?: string;
   freeText?: string;
-  maxMonsterCount?: number;
+  maxEnemyCount?: number;
 }
 
 export interface GeneratedEnemyDto {

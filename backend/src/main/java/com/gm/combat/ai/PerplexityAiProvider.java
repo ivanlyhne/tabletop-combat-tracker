@@ -25,7 +25,7 @@ public class PerplexityAiProvider implements AiProvider {
             The JSON must match this exact schema:
             {
               "narrativeSummary": "string",
-              "monsters": [
+              "enemies": [
                 {"name": "string", "count": number, "challengeRating": "string"}
               ],
               "terrainFeatures": ["string"],
@@ -114,7 +114,7 @@ public class PerplexityAiProvider implements AiProvider {
             String summary = node.path("narrativeSummary").asText("No summary provided.");
 
             List<GeneratedEnemy> enemies = new ArrayList<>();
-            for (JsonNode m : node.path("monsters")) {
+            for (JsonNode m : node.path("enemies")) {
                 enemies.add(new GeneratedEnemy(
                         m.path("name").asText("Unknown"),
                         m.path("count").asInt(1),
@@ -158,14 +158,14 @@ public class PerplexityAiProvider implements AiProvider {
                 Environment: %s
                 Difficulty target: %s
                 Additional notes: %s
-                Maximum monster types: %d
+                Maximum enemy types: %d
                 """.formatted(
                 prompt.ruleset(),
                 String.join(", ", prompt.partyMembers()),
                 prompt.environment() != null ? prompt.environment() : "unspecified",
                 prompt.difficultyTarget() != null ? prompt.difficultyTarget() : "MEDIUM",
                 prompt.freeText() != null ? prompt.freeText() : "none",
-                prompt.maxMonsterCount() > 0 ? prompt.maxMonsterCount() : 8
+                prompt.maxEnemyCount() > 0 ? prompt.maxEnemyCount() : 8
         );
     }
 }

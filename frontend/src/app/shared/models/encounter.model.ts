@@ -26,7 +26,7 @@ export interface Combatant {
   id: string;
   encounterId: string;
   characterId?: string;
-  monsterId?: string;
+  enemyId?: string;
   displayName: string;
   initiativeValue?: number;
   initiativeModifier: number;
@@ -71,7 +71,7 @@ export interface EncounterRequest {
 }
 
 export interface AddCombatantRequest {
-  sourceType: 'CHARACTER' | 'MONSTER';
+  sourceType: 'CHARACTER' | 'ENEMY';
   sourceId: string;
   displayName?: string;
   initiativeValue?: number;

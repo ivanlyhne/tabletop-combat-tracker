@@ -78,7 +78,7 @@ public class AiSettingsController {
                 req.environment(),
                 req.difficultyTarget(),
                 req.freeText(),
-                req.maxMonsterCount() > 0 ? req.maxMonsterCount() : 8
+                req.maxEnemyCount() > 0 ? req.maxEnemyCount() : 8
         );
 
         try {

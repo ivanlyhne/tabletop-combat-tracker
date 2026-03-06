@@ -11,5 +11,5 @@ public record GenerateEncounterRequest(
         String environment,
         String difficultyTarget,
         String freeText,
-        @Min(1) @Max(20) int maxMonsterCount
+        @Min(1) @Max(20) int maxEnemyCount
 ) {}

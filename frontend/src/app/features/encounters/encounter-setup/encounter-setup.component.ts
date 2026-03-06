@@ -373,7 +373,7 @@ export class EncounterSetupComponent implements OnInit {
       environment: v.environmentTag || undefined,
       difficultyTarget: 'MEDIUM',
       freeText: [v.description].filter(Boolean).join(' ') || undefined,
-      maxMonsterCount: 8,
+      maxEnemyCount: 8,
     };
 
     this.aiLoading.set(true);
@@ -455,7 +455,7 @@ export class EncounterSetupComponent implements OnInit {
 
     const enemyRequests: AddCombatantRequest[] = this.enemySlots().flatMap(({ enemy, count }) =>
       Array.from({ length: count }, (_, i) => ({
-        sourceType: 'MONSTER' as const,
+        sourceType: 'ENEMY' as const,
         sourceId: enemy.id,
         displayName: count > 1 ? `${enemy.name} ${i + 1}` : undefined,
       }))

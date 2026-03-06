@@ -70,16 +70,16 @@ public class Dnd5eDifficultyCalculator {
             Map.entry("30",    155000)
     );
 
-    public DifficultyResult calculate(List<CombatantSummary> party, List<CombatantSummary> monsters) {
-        if (monsters.isEmpty()) {
+    public DifficultyResult calculate(List<CombatantSummary> party, List<CombatantSummary> enemies) {
+        if (enemies.isEmpty()) {
             return new DifficultyResult(DifficultyLevel.TRIVIAL, 0, 0);
         }
 
-        int rawXp = monsters.stream()
+        int rawXp = enemies.stream()
                 .mapToInt(m -> crToXp(m.challengeRating()))
                 .sum();
 
-        double multiplier = getMultiplier(monsters.size());
+        double multiplier = getMultiplier(enemies.size());
         int adjustedXp = (int) (rawXp * multiplier);
 
         int[] totals = new int[4];

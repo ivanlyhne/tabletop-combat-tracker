@@ -385,7 +385,7 @@ public class CombatService {
                     .status(CombatantStatus.ALIVE).conditions(new ArrayList<>())
                     .tokenColor("#4a90e2").statsOverride(statsOverride).build();
 
-        } else if ("MONSTER".equalsIgnoreCase(req.sourceType())) {
+        } else if ("ENEMY".equalsIgnoreCase(req.sourceType())) {
             Enemy enemy = enemyRepository.findById(req.sourceId())
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Enemy not found"));
             if (enemy.getChallengeRating() != null) {
@@ -394,7 +394,7 @@ public class CombatService {
 
             return Combatant.builder()
                     .encounter(encounter)
-                    .monsterId(enemy.getId())
+                    .enemyId(enemy.getId())
                     .displayName(req.displayName() != null ? req.displayName() : enemy.getName())
                     .initiativeValue(req.initiativeValue())
                     .initiativeModifier(req.initiativeModifier() != null ? req.initiativeModifier() : 0)
@@ -405,7 +405,7 @@ public class CombatService {
                     .tokenColor("#e24a4a").statsOverride(statsOverride).build();
 
         } else {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "sourceType must be CHARACTER or MONSTER");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "sourceType must be CHARACTER or ENEMY");
         }
     }
 
