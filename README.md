@@ -1,6 +1,6 @@
-# Tabletop Combat Tracker
+# GM Combat Tracker
 
-A browser-based GM assistant for running turn-based combat encounters in Dungeons & Dragons 5th Edition, built with a multi-ruleset architecture so other systems can be added later.
+> The GM Combat Tracker is a web app for tabletop RPG game masters (primarily D&D 5e) to run combat encounters digitally. The GM creates campaigns with players and enemies, then starts encounters when needed as part of his/her gameplay (outside this app) — the GM choose party members (players) and enemies for this encounter — the app can generate enemies for encounter from a prompt or difficulty automatically. During encounters/battle, the GM runs turn-by-turn combat round on a live battle map: tracking initiative order, HP, and conditions for every creature (players and enemies). Players can follow along in real time on their own devices via a shared read-only view, seeing the same battlefield and combatant status as the GM.
 
 ## Stack
 
@@ -20,33 +20,40 @@ A browser-based GM assistant for running turn-based combat encounters in Dungeon
 |-------|---------|--------|
 | 1 | Monorepo scaffold (Docker Compose, Spring Boot, Angular) | ✅ Done |
 | 2 | JWT authentication (register / login, guards, HTTP interceptor) | ✅ Done |
-| 3 | Campaign / Character / Monster CRUD | ✅ Done |
+| 3 | Campaign / Character / Enemy CRUD | ✅ Done |
 | 4 | Encounter setup + 5e XP difficulty calculator | ✅ Done |
 | 5 | Combat engine (initiative, HP, conditions, turns, round counter) | ✅ Done |
 | 6 | Real-time STOMP WebSocket sync across all connected clients | ✅ Done |
 | 7 | Battle map (Konva.js canvas, tokens, hex/square grid, annotations) | ✅ Done |
 | 8 | AI encounter generation (Claude / Perplexity providers, settings UI) | ✅ Done |
 | 9 | Security hardening + unit test suite | ✅ Done |
-| 10 | Polish — conditions library, dice roller, player view, keyboard shortcuts, persistent sidebar nav | ✅ Done |
-| 11 | JSON export / import, PWA shell | 🔲 Planned |
+| 10 | Polish — conditions library, player view, keyboard shortcuts, persistent sidebar nav, UX overhaul, share link | ✅ Done |
+| 10b | Rename Monster → Enemy throughout (UI, code, DB); remove dice roller | ✅ Done |
+| 11 | Global enemy library (cross-campaign); AI generate enemy from CR | ✅ Done |
 
 ## Features
 
 ### Navigation
 - Persistent 56px icon-only sidebar visible on all authenticated pages
-- Shield logo links to campaigns; icons for Campaigns, AI Settings, and Logout
+- Icons for Campaigns, Enemy Library, AI Settings, and Logout
 - Sidebar hidden automatically on login, register, and public player view routes
-- Active route is highlighted in purple; hover tooltips identify each icon
+- Active route highlighted in purple; hover tooltips identify each icon
 
 ### Campaign Management
 - Create and manage campaigns, each with its own ruleset (DND_5E / GENERIC)
-- Full CRUD for player characters and monster library per campaign
+- Full CRUD for player characters and enemy roster per campaign
+
+### Global Enemy Library
+- Shared catalogue of enemy stat blocks available across all campaigns
+- Add, edit, and delete reusable enemies outside any specific campaign
+- Encounter setup pulls from both campaign enemies and the global library
 
 ### Encounter Setup
-- Build encounters by picking party members and monsters from the campaign library
+- Build encounters by picking party members and enemies from the campaign or global library
 - Live 5e difficulty badge: **TRIVIAL / EASY / MEDIUM / HARD / DEADLY**
   - CR→XP lookup table, per-PC threshold tables, encounter multipliers
-- AI-assisted encounter generation: describe a scenario, Claude or Perplexity suggests monsters matched against your campaign library
+- AI-assisted encounter generation: describe a scenario, Claude or Perplexity suggests enemies matched against your library
+- AI generate from CR: enter a Challenge Rating, let the AI fill in a full enemy stat block
 
 ### Combat Engine
 - Initiative order with drag-to-reorder, full round counter
@@ -63,23 +70,18 @@ A browser-based GM assistant for running turn-based combat encounters in Dungeon
 
 ### Battle Map (Konva.js)
 - Background image upload (JPEG / PNG / WebP, MIME-validated)
-- Square and flat-top hex grid with configurable cell size
+- Square and flat-top hex grid with configurable board dimensions
 - Draggable tokens with snap-to-grid, HP bar overlay, active-turn highlight, stats popup
 - Annotation toolbar: marker pins, area shapes, and text labels
 - Right-click to delete any annotation
-
-### Dice Roller
-- Floating panel (bottom-right FAB, press **D** to toggle)
-- Buttons for d4, d6, d8, d10, d12, d20, d100
-- Optional modifier input, animated result display
-- Natural 20 🎉 and Natural 1 💀 highlights
-- Roll history (last 10 rolls)
+- Read-only mode for the player view (tokens visible, no editing)
 
 ### Player Read-Only View
 - Public URL `/player/:encounterId` — no login required
 - Shows only combatants marked "visible to players"
 - Live HP bars, conditions, and active-turn banner via STOMP
-- Dark fantasy theme, mobile-friendly grid layout
+- Read-only battle map showing the same board the GM sees
+- Share button in combat view copies the player link to clipboard
 
 ### Keyboard Shortcuts (Combat View)
 
@@ -87,7 +89,6 @@ A browser-based GM assistant for running turn-based combat encounters in Dungeon
 |-----|--------|
 | `N` | Next turn |
 | `P` | Pause / Resume combat |
-| `D` | Toggle dice roller |
 | `H` | Focus Heal input |
 | `X` | Focus Damage input |
 | `C` | Toggle condition picker |
@@ -198,7 +199,7 @@ cd frontend && npm run build
 
 ## REST API Overview
 
-All endpoints except `/api/auth/**`, `/api/player/**`, `/uploads/**`, and `/ws` require a `Authorization: Bearer <token>` header.
+All endpoints except `/api/auth/**`, `/api/player/**`, `/uploads/**`, and `/ws` require an `Authorization: Bearer <token>` header.
 
 | Method | Path | Description |
 |--------|------|-------------|
@@ -207,7 +208,8 @@ All endpoints except `/api/auth/**`, `/api/player/**`, `/uploads/**`, and `/ws` 
 | `GET` | `/api/campaigns` | List campaigns |
 | `POST` | `/api/campaigns` | Create campaign |
 | `GET` | `/api/campaigns/:id/characters` | List characters |
-| `GET` | `/api/campaigns/:id/monsters` | List monsters |
+| `GET/POST/PUT/DELETE` | `/api/campaigns/:id/enemies` | Campaign enemy CRUD |
+| `GET/POST/PUT/DELETE` | `/api/enemies/global` | Global enemy library CRUD |
 | `GET` | `/api/campaigns/:id/encounters` | List encounters |
 | `POST` | `/api/campaigns/:id/encounters` | Create encounter |
 | `GET` | `/api/rulesets/{rulesetId}/conditions` | Get condition list (e.g. `DND_5E`) |
@@ -220,8 +222,9 @@ All endpoints except `/api/auth/**`, `/api/player/**`, `/uploads/**`, and `/ws` 
 | `GET/POST` | `/api/maps` | Map CRUD |
 | `POST` | `/api/maps/:id/background` | Upload background image |
 | `GET/POST/DELETE` | `/api/maps/:id/encounters/:eid/annotations` | Annotation CRUD |
-| `GET/POST` | `/api/settings/ai` | Read / write AI provider settings |
-| `POST` | `/api/settings/ai/generate-encounter` | AI encounter generation |
+| `GET/PUT` | `/api/settings/ai` | Read / write AI provider settings |
+| `POST` | `/api/ai/generate-encounter` | AI encounter generation |
+| `POST` | `/api/ai/generate-enemy` | AI generate enemy stat block from CR |
 | `GET` | `/api/player/encounters/:id` | **Public** — player read-only view |
 
 ### WebSocket
@@ -237,32 +240,33 @@ Subscribe to `/topic/encounter/{encounterId}` to receive live `CombatStateMessag
 tabletop-combat-tracker/
 ├── backend/
 │   └── src/main/java/com/gm/combat/
+│       ├── ai/              # AiProvider strategy + Claude/Perplexity/None providers
 │       ├── config/          # Spring Security, WebSocket config
-│       ├── controller/      # REST controllers (Auth, Campaign, Combat, Map, AI, Player, Ruleset…)
+│       ├── controller/      # REST controllers (Auth, Campaign, Combat, Map, AI, Player, Enemy…)
 │       ├── dto/             # Request / response records
-│       ├── entity/          # JPA entities (User, Campaign, Character, Monster, Encounter, Combatant…)
+│       ├── entity/          # JPA entities (User, Campaign, Character, Enemy, Encounter, Combatant…)
 │       ├── repository/      # Spring Data JPA repositories
 │       ├── ruleset/         # RulesetAdapter interface + DND_5E + Generic implementations
 │       ├── security/        # JWT filter, UserDetailsService, SecurityUtils
-│       ├── service/         # Business logic (Combat, Encounter, Map, AI, AiConfig…)
+│       ├── service/         # Business logic (Combat, Encounter, Map, Enemy, AiConfig…)
 │       └── websocket/       # STOMP message types
 ├── frontend/
 │   └── src/app/
 │       ├── core/
-│       │   ├── api/         # Angular HTTP services (Campaign, Character, Combat, Map, AI, Ruleset…)
+│       │   ├── api/         # Angular HTTP services (Campaign, Character, Enemy, Combat, Map, AI…)
 │       │   ├── auth/        # AuthService, JWT interceptor, authGuard
 │       │   └── websocket/   # StompService
 │       ├── features/
 │       │   ├── auth/        # Login / Register pages
 │       │   ├── campaigns/   # Campaign list
 │       │   ├── characters/  # Character CRUD
-│       │   ├── monsters/    # Monster CRUD
+│       │   ├── enemies/     # Enemy CRUD + Global enemy library
 │       │   ├── encounters/  # Encounter setup
-│       │   ├── combat/      # CombatView, InitiativeTracker, BattleMap, ConditionPicker, DiceRoller
+│       │   ├── combat/      # CombatView, InitiativeTracker, BattleMap, ConditionPicker
 │       │   ├── map/         # Konva.js battle map
 │       │   ├── player/      # Public player view
 │       │   └── settings/    # AI settings
-│       └── shared/models/   # TypeScript interfaces (Encounter, Combatant, Map…)
+│       └── shared/models/   # TypeScript interfaces (Encounter, Combatant, Enemy, Map…)
 └── docker-compose.yml
 ```
 
