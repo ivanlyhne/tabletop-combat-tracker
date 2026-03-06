@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
@@ -34,6 +35,8 @@ public class MapService {
             Set.of("jpg", "jpeg", "png", "webp");
     private static final Set<String> ALLOWED_MIME_TYPES =
             Set.of("image/jpeg", "image/png", "image/webp");
+
+    @Value("${app.upload-dir}") private String uploadDirPath;
 
     private final MapRepository mapRepository;
     private final AnnotationRepository annotationRepository;
@@ -103,7 +106,7 @@ public class MapService {
         }
 
         try {
-            Path uploadDir = Path.of("uploads");
+            Path uploadDir = Path.of(uploadDirPath);
             Files.createDirectories(uploadDir);
             // Use only the sanitised extension — never trust the original filename
             String filename = mapId + "_bg." + ext.toLowerCase();

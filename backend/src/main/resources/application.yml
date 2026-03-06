@@ -22,6 +22,7 @@ app:
     secret: ${JWT_SECRET}
     expiration-ms: 86400000
   allowed-origins: ${ALLOWED_ORIGINS:http://localhost:4200}
+  upload-dir: ${UPLOAD_DIR:uploads}
 
 jasypt:
   encryptor:
