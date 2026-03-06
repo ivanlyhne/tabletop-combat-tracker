@@ -23,4 +23,13 @@ public interface AiProvider {
      * @throws AiException if the key is invalid or the provider is unreachable
      */
     void validateKey() throws AiException;
+
+    /**
+     * Generate a D&D enemy stat block for the given challenge rating.
+     *
+     * @param challengeRating e.g. "1", "0.25", "5"
+     * @param ruleset         e.g. "DND_5E"
+     * @throws AiException on API or parsing failures
+     */
+    GenerateEnemyResult generateEnemy(String challengeRating, String ruleset) throws AiException;
 }

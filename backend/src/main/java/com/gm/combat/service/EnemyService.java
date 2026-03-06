@@ -45,6 +45,33 @@ public class EnemyService {
     }
 
     @Transactional(readOnly = true)
+    public EnemyResponse findGlobalById(UUID id) {
+        return enemyRepository.findById(id)
+                .filter(e -> e.getCampaign() == null)
+                .map(EnemyResponse::from)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Global enemy not found"));
+    }
+
+    public EnemyResponse createGlobal(EnemyRequest req) {
+        return EnemyResponse.from(enemyRepository.save(buildEnemy(req, null)));
+    }
+
+    public EnemyResponse updateGlobal(UUID id, EnemyRequest req) {
+        Enemy enemy = enemyRepository.findById(id)
+                .filter(e -> e.getCampaign() == null)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Global enemy not found"));
+        applyRequest(enemy, req);
+        return EnemyResponse.from(enemyRepository.save(enemy));
+    }
+
+    public void deleteGlobal(UUID id) {
+        Enemy enemy = enemyRepository.findById(id)
+                .filter(e -> e.getCampaign() == null)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Global enemy not found"));
+        enemyRepository.delete(enemy);
+    }
+
+    @Transactional(readOnly = true)
     public EnemyResponse findById(UUID campaignId, UUID id, String userEmail) {
         requireCampaign(campaignId, userEmail);
         return enemyRepository.findByIdAndCampaignId(id, campaignId)

@@ -1,9 +1,12 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { AiService } from '../../../core/api/ai.service';
 import { Enemy } from '../../../shared/models/enemy.model';
 
 @Component({
@@ -15,6 +18,8 @@ import { Enemy } from '../../../shared/models/enemy.model';
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
   ],
   template: `
     <h2 mat-dialog-title>{{ data?.id ? 'Edit Enemy' : 'New Enemy' }}</h2>
@@ -39,6 +44,15 @@ import { Enemy } from '../../../shared/models/enemy.model';
             <input matInput type="number" formControlName="xpValue" min="0" />
           </mat-form-field>
         </div>
+
+        @if (aiLoading()) {
+          <div class="ai-row"><mat-spinner diameter="20"></mat-spinner><span>Generating...</span></div>
+        } @else {
+          <button mat-stroked-button type="button" class="ai-btn" (click)="generateFromCr()"
+                  [disabled]="!form.get('challengeRating')?.value">
+            <mat-icon>auto_awesome</mat-icon> Generate from CR
+          </button>
+        }
 
         <mat-form-field class="full-width">
           <mat-label>HP (e.g. 2d8+4 or 45)</mat-label>
@@ -69,15 +83,20 @@ import { Enemy } from '../../../shared/models/enemy.model';
     </mat-dialog-actions>
   `,
   styles: [`
-    .form-grid { display: flex; flex-direction: column; min-width: 440px; padding-top: 8px; }
+    .form-grid { display: flex; flex-direction: column; min-width: 440px; padding-top: 8px; gap: 4px; }
     .full-width { width: 100%; }
     .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .ai-btn { width: 100%; margin-bottom: 8px; }
+    .ai-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; color: rgba(255,255,255,0.6); font-size: 13px; }
   `],
 })
 export class EnemyFormComponent {
   private fb = inject(FormBuilder);
   private dialogRef = inject(MatDialogRef<EnemyFormComponent>);
+  private aiService = inject(AiService);
   readonly data: Enemy | null = inject(MAT_DIALOG_DATA);
+
+  aiLoading = signal(false);
 
   form = this.fb.group({
     name: [this.data?.name ?? '', [Validators.required, Validators.maxLength(255)]],
@@ -87,6 +106,28 @@ export class EnemyFormComponent {
     armorClass: [this.data?.armorClass ?? 10, [Validators.required, Validators.min(1)]],
     walkSpeed: [(this.data?.speed?.['walk'] as number) ?? 30],
   });
+
+  generateFromCr() {
+    const cr = this.form.get('challengeRating')?.value;
+    if (!cr) return;
+    this.aiLoading.set(true);
+    this.aiService.generateEnemy({ challengeRating: String(cr) }).subscribe({
+      next: (result) => {
+        this.form.patchValue({
+          name: result.name,
+          challengeRating: parseFloat(result.challengeRating),
+          xpValue: result.xpValue ?? null,
+          hpFormula: result.hpFormula,
+          armorClass: result.armorClass,
+          walkSpeed: result.walkSpeed,
+        });
+        this.aiLoading.set(false);
+      },
+      error: () => {
+        this.aiLoading.set(false);
+      },
+    });
+  }
 
   save() {
     if (this.form.valid) {

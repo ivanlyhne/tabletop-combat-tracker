@@ -146,21 +146,39 @@ const ENVIRONMENT_TAGS = ['dungeon', 'forest', 'city', 'cave', 'underwater', 'mo
                   }
                 </button>
               </div>
-              @if (enemies().length === 0) {
-                <p class="empty-hint">No enemies in this campaign yet.</p>
+              @if (allEnemies().length === 0) {
+                <p class="empty-hint">No enemies available. Add enemies to this campaign or the global Enemy Library.</p>
               }
               <div class="enemy-picker">
-                @for (m of enemies(); track m.id) {
-                  <div class="enemy-row">
-                    <span class="enemy-name">
-                      {{ m.name }}
-                      @if (m.challengeRating != null) { <span class="cr-chip">CR {{ m.challengeRating }}</span> }
-                      @if (m.xpValue) { <span class="xp-chip">{{ m.xpValue }} XP</span> }
-                    </span>
-                    <button mat-icon-button (click)="addEnemy(m)" title="Add one">
-                      <mat-icon>add_circle</mat-icon>
-                    </button>
-                  </div>
+                @if (campaignEnemies().length > 0) {
+                  <p class="picker-group-label">Campaign Enemies</p>
+                  @for (m of campaignEnemies(); track m.id) {
+                    <div class="enemy-row">
+                      <span class="enemy-name">
+                        {{ m.name }}
+                        @if (m.challengeRating != null) { <span class="cr-chip">CR {{ m.challengeRating }}</span> }
+                        @if (m.xpValue) { <span class="xp-chip">{{ m.xpValue }} XP</span> }
+                      </span>
+                      <button mat-icon-button (click)="addEnemy(m)" title="Add one">
+                        <mat-icon>add_circle</mat-icon>
+                      </button>
+                    </div>
+                  }
+                }
+                @if (globalEnemies().length > 0) {
+                  <p class="picker-group-label">Global Library</p>
+                  @for (m of globalEnemies(); track m.id) {
+                    <div class="enemy-row">
+                      <span class="enemy-name">
+                        {{ m.name }}
+                        @if (m.challengeRating != null) { <span class="cr-chip">CR {{ m.challengeRating }}</span> }
+                        @if (m.xpValue) { <span class="xp-chip">{{ m.xpValue }} XP</span> }
+                      </span>
+                      <button mat-icon-button (click)="addEnemy(m)" title="Add one">
+                        <mat-icon>add_circle</mat-icon>
+                      </button>
+                    </div>
+                  }
                 }
               </div>
 
@@ -247,6 +265,15 @@ const ENVIRONMENT_TAGS = ['dungeon', 'forest', 'city', 'cave', 'underwater', 'mo
       overflow-y: auto;
       overflow-x: hidden;
     }
+    .picker-group-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: rgba(255,255,255,0.45);
+      margin: 6px 0 2px;
+      padding: 0;
+    }
     .enemy-row {
       display: flex;
       align-items: center;
@@ -290,7 +317,9 @@ export class EncounterSetupComponent implements OnInit {
 
   campaignId = signal('');
   characters = signal<Character[]>([]);
-  enemies = signal<Enemy[]>([]);
+  campaignEnemies = signal<Enemy[]>([]);
+  globalEnemies = signal<Enemy[]>([]);
+  allEnemies = computed(() => [...this.campaignEnemies(), ...this.globalEnemies()]);
   selectedCharacterIds = signal<Set<string>>(new Set());
   enemySlots = signal<EnemySlot[]>([]);
   loading = signal(false);
@@ -332,7 +361,8 @@ export class EncounterSetupComponent implements OnInit {
     const id = this.route.snapshot.paramMap.get('campaignId') ?? '';
     this.campaignId.set(id);
     this.characterService.getAll(id).subscribe(c => this.characters.set(c));
-    this.enemyService.getAll(id).subscribe(m => this.enemies.set(m));
+    this.enemyService.getAll(id).subscribe(m => this.campaignEnemies.set(m));
+    this.enemyService.getGlobal().subscribe(list => this.globalEnemies.set(list));
   }
 
   toggleCharacter(id: string) {
@@ -385,12 +415,12 @@ export class EncounterSetupComponent implements OnInit {
         this.enemySlots.set([]);
 
         // Match AI-suggested enemies to existing campaign enemies by name
-        const existingEnemies = this.enemies();
+        const availableEnemies = this.allEnemies();
         let matched = 0;
         const unmatched: string[] = [];
 
         for (const aiEnemy of res.enemies) {
-          const found = existingEnemies.find(m =>
+          const found = availableEnemies.find(m =>
             m.name.toLowerCase() === aiEnemy.name.toLowerCase());
           if (found) {
             for (let i = 0; i < aiEnemy.count; i++) {
@@ -409,9 +439,9 @@ export class EncounterSetupComponent implements OnInit {
 
         const matchMsg = matched > 0
           ? `Matched ${matched} of ${res.enemies.length} enemy type(s) from your library.`
-          : `No enemies matched your campaign library.`;
+          : `No enemies matched your campaign or global library.`;
         const unmatchMsg = unmatched.length > 0
-          ? ` Unmatched: ${unmatched.join(', ')}. Add them via the Enemies page first.`
+          ? ` Unmatched: ${unmatched.join(', ')}. Add them via the Enemies page or global library first.`
           : '';
         this.snackBar.open(matchMsg + unmatchMsg, 'Close', { duration: 8000 });
       },

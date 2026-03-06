@@ -39,6 +39,21 @@ export interface GenerateEncounterResponse {
   suggestedPositions: string[];
 }
 
+export interface GenerateEnemyRequest {
+  challengeRating: string;
+  ruleset?: string;
+}
+
+export interface GenerateEnemyResult {
+  name: string;
+  challengeRating: string;
+  xpValue?: number;
+  hpFormula: string;
+  armorClass: number;
+  walkSpeed: number;
+  description?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AiService {
   private http = inject(HttpClient);
@@ -57,5 +72,9 @@ export class AiService {
 
   generateEncounter(req: GenerateEncounterRequest) {
     return this.http.post<GenerateEncounterResponse>('/api/ai/generate-encounter', req);
+  }
+
+  generateEnemy(req: GenerateEnemyRequest) {
+    return this.http.post<GenerateEnemyResult>('/api/ai/generate-enemy', req);
   }
 }

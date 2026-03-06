@@ -16,6 +16,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/campaigns/campaign-list/campaign-list.component').then(m => m.CampaignListComponent),
   },
   {
+    path: 'enemies',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/enemies/global-enemy-library/global-enemy-library.component').then(m => m.GlobalEnemyLibraryComponent),
+  },
+  {
     path: 'campaigns/:campaignId/characters',
     canActivate: [authGuard],
     loadComponent: () => import('./features/characters/character-list/character-list.component').then(m => m.CharacterListComponent),

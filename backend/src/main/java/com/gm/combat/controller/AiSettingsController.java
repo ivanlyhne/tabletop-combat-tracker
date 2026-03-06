@@ -4,6 +4,8 @@ import com.gm.combat.ai.AiException;
 import com.gm.combat.ai.AiProvider;
 import com.gm.combat.ai.AiProviderFactory;
 import com.gm.combat.ai.EncounterPrompt;
+import com.gm.combat.ai.GenerateEnemyResult;
+import com.gm.combat.dto.ai.GenerateEnemyApiRequest;
 import com.gm.combat.dto.ai.AiSettingsRequest;
 import com.gm.combat.dto.ai.AiSettingsResponse;
 import com.gm.combat.dto.ai.GenerateEncounterRequest;
@@ -83,6 +85,20 @@ public class AiSettingsController {
 
         try {
             return GenerateEncounterResponse.from(provider.generateEncounter(prompt));
+        } catch (AiException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+    }
+
+    @PostMapping("/api/ai/generate-enemy")
+    public GenerateEnemyResult generateEnemy(@RequestBody @Valid GenerateEnemyApiRequest req) {
+        String email = SecurityUtils.currentUserEmail();
+        AiProvider provider = aiProviderFactory.createForUser(email);
+        try {
+            return provider.generateEnemy(
+                    req.challengeRating() != null ? req.challengeRating() : "1",
+                    req.ruleset() != null ? req.ruleset() : "DND_5E"
+            );
         } catch (AiException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }

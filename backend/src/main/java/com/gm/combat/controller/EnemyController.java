@@ -28,6 +28,29 @@ public class EnemyController {
         return enemyService.findGlobal();
     }
 
+    @GetMapping("/api/enemies/global/{id}")
+    public EnemyResponse getGlobalById(@PathVariable UUID id) {
+        return enemyService.findGlobalById(id);
+    }
+
+    @PostMapping("/api/enemies/global")
+    @ResponseStatus(HttpStatus.CREATED)
+    public EnemyResponse createGlobal(@Valid @RequestBody EnemyRequest req) {
+        return enemyService.createGlobal(req);
+    }
+
+    @PutMapping("/api/enemies/global/{id}")
+    public EnemyResponse updateGlobal(@PathVariable UUID id,
+                                       @Valid @RequestBody EnemyRequest req) {
+        return enemyService.updateGlobal(id, req);
+    }
+
+    @DeleteMapping("/api/enemies/global/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteGlobal(@PathVariable UUID id) {
+        enemyService.deleteGlobal(id);
+    }
+
     @GetMapping("/api/campaigns/{campaignId}/enemies/{id}")
     public EnemyResponse getById(@PathVariable UUID campaignId, @PathVariable UUID id) {
         return enemyService.findById(campaignId, id, SecurityUtils.currentUserEmail());

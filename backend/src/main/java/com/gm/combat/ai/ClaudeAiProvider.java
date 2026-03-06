@@ -176,4 +176,33 @@ public class ClaudeAiProvider implements AiProvider {
                 prompt.maxEnemyCount() > 0 ? prompt.maxEnemyCount() : 8
         );
     }
+
+    @Override
+    public GenerateEnemyResult generateEnemy(String challengeRating, String ruleset) throws AiException {
+        String userMessage = "Generate a D&D 5e creature at Challenge Rating " + challengeRating
+                + ". Return ONLY valid JSON with fields: name (string), challengeRating (string),"
+                + " xpValue (number), hpFormula (dice notation like 4d8+4), armorClass (number),"
+                + " walkSpeed (number), description (1-2 sentences).";
+        String rawResponse = callApi(userMessage, 512);
+        return parseEnemyResponse(rawResponse);
+    }
+
+    private GenerateEnemyResult parseEnemyResponse(String text) throws AiException {
+        try {
+            String json = extractJson(text);
+            JsonNode node = mapper.readTree(json);
+            return new GenerateEnemyResult(
+                    node.path("name").asText("Unknown Creature"),
+                    node.path("challengeRating").asText("1"),
+                    node.path("xpValue").isNull() || node.path("xpValue").isMissingNode()
+                            ? null : node.path("xpValue").asInt(0),
+                    node.path("hpFormula").asText("1d8"),
+                    node.path("armorClass").asInt(10),
+                    node.path("walkSpeed").asInt(30),
+                    node.path("description").asText("")
+            );
+        } catch (Exception e) {
+            throw new AiException("Failed to parse enemy response: " + e.getMessage());
+        }
+    }
 }
