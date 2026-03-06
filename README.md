@@ -283,3 +283,117 @@ RulesetAdapter (interface)
 ```
 
 Adding a new ruleset (e.g. Pathfinder 2e) requires only a new `RulesetAdapter` `@Component` — no changes to controllers or services.
+
+---
+
+## Deployment
+
+### Architecture
+
+```
+Internet (HTTPS :443 / HTTP :80)
+        │
+        ▼
+  OCI VM — VM.Standard.A1.Flex (4 OCPU / 24 GB RAM) — Always Free ✅
+  ┌────────────────────────────────────────────────────────────┐
+  │  Host nginx  :80/:443  (Let's Encrypt cert via Certbot)    │
+  │    ├── /api/**   → Spring Boot container  :8080            │
+  │    ├── /ws       → Spring Boot container  :8080  (STOMP)   │
+  │    ├── /uploads/ → Spring Boot container  :8080            │
+  │    └── /**       → Angular SPA container  :3000            │
+  │                                                            │
+  │  Docker containers (internal ports only):                  │
+  │    backend   127.0.0.1:8080   Spring Boot 3 / Java 21      │
+  │    frontend  127.0.0.1:3000   nginx serving Angular SPA    │
+  │    postgres  internal only    PostgreSQL 16                 │
+  └────────────────────────────────────────────────────────────┘
+        │
+        ▼
+  OCI Block Volume — 150 GB — Always Free ✅ (total ≤ 200 GB)
+    /data/postgres/    PostgreSQL data directory
+    /data/uploads/     Map background image uploads
+```
+
+**No load balancer** — OCI's free flexible LB is bandwidth-capped at 10 Mbps. nginx handles TLS directly with full VM NIC bandwidth.
+
+### Oracle Cloud Always Free Resources Used
+
+| Resource | Limit | Used |
+|----------|-------|------|
+| VM.Standard.A1.Flex | 4 OCPU / 24 GB total | 1 instance (4 OCPU / 24 GB) |
+| Block Volume | 200 GB total | ~197 GB (47 GB boot + 150 GB data) |
+| Outbound transfer | 10 TB/month | Well under for hobby scale |
+| VCN + subnet | 2 free VCNs | 1 VCN |
+
+All resources are **permanently free** (not trial credits).
+
+### Prerequisites
+
+| Tool | Version | Install |
+|------|---------|---------|
+| Terraform | ≥ 1.6 | [terraform.io](https://developer.hashicorp.com/terraform/install) |
+| OCI CLI (optional) | any | [docs.oracle.com](https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/cliinstall.htm) |
+| OCI API key pair | — | OCI Console → User Settings → API Keys → Add |
+| Domain name | — | Any registrar; create A record → VM public IP |
+
+### Quick Start (Oracle Cloud)
+
+```bash
+# 1. Provision infrastructure
+cd infra/providers/oracle
+cp terraform.tfvars.example terraform.tfvars
+nano terraform.tfvars          # fill in OCIDs, SSH key, domain, DB password
+terraform init
+terraform apply                # creates VM + block volume + networking (~3 min)
+
+# 2. Note the output: vm_public_ip = "xxx.xxx.xxx.xxx"
+# Point your domain A record to this IP, wait for DNS propagation
+
+# 3. SSH into the VM
+ssh ubuntu@<vm_public_ip>
+
+# 4. Clone repo + configure secrets
+git clone https://github.com/ivanlyhne/tabletop-combat-tracker
+cd tabletop-combat-tracker/infra/docker
+cp .env.example .env
+nano .env    # fill in JWT_SECRET, JASYPT_PASSWORD, DB_PASSWORD, ALLOWED_ORIGINS
+
+# 5. Start the stack
+docker compose -f docker-compose.prod.yml up -d
+
+# 6. Issue TLS certificate (free, auto-renews every 90 days)
+sudo certbot --nginx -d your-domain.com --email you@example.com --agree-tos --non-interactive
+
+# 7. Verify
+curl https://your-domain.com/actuator/health   # → {"status":"UP"}
+```
+
+### Environment Variables Reference
+
+| Variable | Required | Dev default | Prod value |
+|----------|----------|-------------|------------|
+| `JWT_SECRET` | ✅ | none (must set) | `$(openssl rand -base64 48)` |
+| `JASYPT_PASSWORD` | ✅ | none (must set) | `$(openssl rand -base64 32)` |
+| `DB_URL` | ✅ | `jdbc:postgresql://localhost:5432/gm_combat` | `jdbc:postgresql://postgres:5432/combat_db` |
+| `DB_USERNAME` | ✅ | `gm_user` | `combat` |
+| `DB_PASSWORD` | ✅ | `gm_pass` | strong password |
+| `ALLOWED_ORIGINS` | ✅ | `http://localhost:4200` | `https://your-domain.com` |
+| `UPLOAD_DIR` | ❌ | `uploads` (local dir) | `/data/uploads` |
+| `DOMAIN` | prod only | — | `combat.yourdomain.com` |
+| `CERTBOT_EMAIL` | prod only | — | `you@example.com` |
+
+### Update Deployment
+
+```bash
+# On the VM
+cd tabletop-combat-tracker
+git pull
+docker compose -f infra/docker/docker-compose.prod.yml build backend frontend
+docker compose -f infra/docker/docker-compose.prod.yml up -d --no-deps backend frontend
+```
+
+### Backup
+
+OCI block volume snapshots cover both the PostgreSQL data dir and uploaded map images.  
+OCI Console → Storage → Block Volumes → combat-tracker-data → Create Manual Backup  
+5 manual backups are included free.
