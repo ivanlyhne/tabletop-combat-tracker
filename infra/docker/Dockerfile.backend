@@ -1,0 +1,23 @@
+# ── Stage 1: Build ────────────────────────────────────────────────────────
+FROM maven:3.9-eclipse-temurin-21-alpine AS build
+WORKDIR /build
+
+# Copy only pom.xml first — Docker layer cache means deps are only
+# re-downloaded when pom.xml changes, not on every source change.
+COPY backend/pom.xml .
+COPY backend/src ./src
+
+RUN mvn package -DskipTests --no-transfer-progress
+
+# ── Stage 2: Runtime ──────────────────────────────────────────────────────
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+
+# Create non-root user
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+COPY --from=build /build/target/*.jar app.jar
+
+USER appuser
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]
