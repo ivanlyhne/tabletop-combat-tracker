@@ -1,0 +1,18 @@
+# infra/providers/oracle/terraform.tfvars.example
+# Copy to terraform.tfvars and fill in your values.
+# Find OCI credentials in: OCI Console -> Profile -> User Settings -> API Keys
+
+tenancy_ocid         = "ocid1.tenancy.oc1..xxxx"
+user_ocid            = "ocid1.user.oc1..xxxx"
+fingerprint          = "aa:bb:cc:dd:ee:ff:00:11:22:33:44:55:66:77:88:99"
+private_key_path     = "~/.oci/oci_api_key.pem"
+region               = "eu-frankfurt-1"
+compartment_id       = "ocid1.tenancy.oc1..xxxx"
+
+ssh_public_key       = "ssh-rsa AAAAB3NzaC1yc2EAAA... your-public-key"
+ssh_private_key_path = "~/.ssh/id_rsa"
+
+domain               = "combat.yourdomain.com"
+
+db_username          = "combat"
+db_password          = "change-me-strong-password"
